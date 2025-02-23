@@ -1,0 +1,7 @@
+javalang==0.13.0
+networkx==2.5.1
+gensim==3.8.2
+smart_open==5.2.1
+scikit-learn==0.19.1
+astor==0.8.1
+tree-sitter==0.20.4

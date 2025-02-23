@@ -1,0 +1,456 @@
+import javalang
+import networkx as nx
+import os
+import java, py, js, php
+import json
+
+from collections import defaultdict
+from itertools import combinations
+
+from gensim.models import Doc2Vec
+from gensim.models.doc2vec import TaggedDocument
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+
+from typing import Dict, Tuple
+
+def get_all_params(functions):
+    all_params = []
+     # Loop melalui setiap fungsi dalam class
+    for func_name, func_data in functions.items():
+        for param_name, param_type in func_data['local_vars'].items():
+            if param_name == 'Parameter':
+                for param in param_type:
+                    # print(func_name, param)
+                    all_params.append(f"{param['type']} {param['name']}")
+
+    return all_params
+
+def get_unique_params(functions):
+    unique_params = set()
+     # Loop melalui setiap fungsi dalam class
+    for func_name, func_data in functions.items():
+        for param_name, param_type in func_data['local_vars'].items():
+            if param_name == 'Parameter':
+                for param in param_type:
+                    unique_params.add(f"{param['type']} {param['name']}")
+
+    return unique_params
+
+def get_all_func(functions):
+    all_func = []
+     # Loop melalui setiap fungsi dalam class
+    for func_name, func_data in functions.items():
+        all_func.append(func_name)
+
+    return all_func
+
+def calculate_lcom(total_all_params, total_unique_params, total_all_func):
+    print(total_all_params, total_unique_params, total_all_func)
+    return 1 - (total_all_params / (total_unique_params * total_all_func)) if (total_unique_params * total_all_func) > 0 else 0
+
+def get_all_func_params(functions):
+    all_func = {}
+     # Loop melalui setiap fungsi dalam class
+    for func_name, func_data in functions.items():
+        all_func_params = []
+        for param_name, param_type in func_data['local_vars'].items():
+            if param_name == 'Parameter':
+                for param in param_type:
+                    all_func_params.append(f"{param['type']} {param['name']}")
+
+        all_func[func_name] = all_func_params
+
+    return all_func
+
+def build_function_graph(functions_param):
+    """ Build a graph where nodes are methods, and edges exist if two methods share attributes. """
+    G = nx.Graph()
+
+    for func_name, func_param in functions_param.items():
+        for func_name2, func_param2 in functions_param.items():
+            if func_name != func_name2:
+                if set(func_param) & set(func_param2):
+                    G.add_edge(func_name, func_name2)
+
+    # for func_name in functions_param.keys():
+    #     G.add_node(func_name)
+
+    return G
+
+def calculate_lcom4(functions):
+    all_func_param = get_all_func_params(functions)
+    # print(all_func_param)
+    G = build_function_graph(all_func_param)
+    connected_component = nx.number_connected_components(G)
+
+    # all_class = get_all_class(functions)
+
+    return connected_component
+
+def get_all_class(functions):
+    return {item.rsplit('.', 1)[0] for item in functions.keys()}
+
+def get_all_function(functions):
+    return {item.rsplit('.', 1)[-1] for item in functions.keys()}
+
+def get_function_name(function_path):
+    return function_path.rsplit('.', 1)[-1]
+
+def get_function_path(function_path):
+    return function_path.rsplit('.', 1)[0]
+
+def get_all_func_params_type(functions):
+    all_func = {}
+     # Loop melalui setiap fungsi dalam class
+    for func_name, func_data in functions.items():
+        all_func_params_type = []
+        for param_name, param_type in func_data['local_vars'].items():
+            if param_name == 'Parameter':
+                for param in param_type:
+                    all_func_params_type.append(param['type'])
+
+        all_func[func_name] = all_func_params_type
+
+    return all_func
+
+def get_all_func_params_type_without_get_set(functions, all_get_set):
+    all_func = get_all_func_params_type(functions)
+
+    return {k: v for k, v in all_func.items() if k not in all_get_set}
+
+def get_all_func_return_type_without_get_set(functions, all_get_set):
+    all_func = get_all_func_return_type(functions)
+
+    return {k: v for k, v in all_func.items() if k not in all_get_set}
+
+def get_all_get_set_func(functions):
+    all_get_set_func = []
+     # Loop melalui setiap fungsi dalam class
+    for func_name, func_data in functions.items():
+        for param_name, param_type in func_data['local_vars'].items():
+            if param_name == 'Parameter':
+                if len(param_type) == 1:
+                    if join_camel_case("set", param_type[0]['name']) == get_function_name(func_name):
+                        all_get_set_func.append(func_name)
+                        all_get_set_func.append(get_function_path(func_name)+"."+ join_camel_case("get", param_type[0]['name']))
+
+    return all_get_set_func
+
+def join_camel_case(s1, s2):
+    return s1.lower() + s2.capitalize()
+
+def get_all_func_return_type(functions):
+    all_func = {}
+     # Loop melalui setiap fungsi dalam class
+    for func_name, func_data in functions.items():
+        all_func_return_type = []
+        for param_name, param_type in func_data['local_vars'].items():
+            if param_name == 'Return':
+                for param in param_type:
+                    # print(func_name, param)
+                    all_func_return_type.append(param['type'])
+
+        all_func[func_name] = all_func_return_type
+
+    return all_func
+
+def calculate_sidc1(method_params, method_return) -> Tuple[float, int, int, int]:
+
+    """Menghitung SIDC1 berdasarkan parameter yang dibagikan antar metode."""
+
+    # filtered_method_params = {k: v for k, v in method_params.items() if v}
+    # filtered_method_return = {k: v for k, v in method_return.items() if v}
+
+    # Hitung pasangan metode yang memiliki parameter input yang sama
+    common_param = get_common_pair(method_params)
+    common_return = get_common_pair(method_return)
+    # print(common_param, "\n", common_return)
+
+    total_combinations = len(list(combinations(list(method_params.keys()), 2))) + len(list(combinations(list(method_return.keys()), 2))) # C(n,2) = n(n-1)/2
+
+    sidc1 = (len(common_param) + len(common_return)) / total_combinations if total_combinations > 0 else 0
+
+    return sidc1, len(common_param), len(common_return), total_combinations
+
+def get_common_pair(list_pair):
+    return [
+        (func1, func2) for func1, func2 in combinations(list_pair.keys(), 2)
+        if (set(list_pair[func1]) & set(list_pair[func2])) or (list_pair[func1] == [] and list_pair[func2] == [])
+    ]
+
+def calculate_siuc(functions, service_operations):
+    clients = get_all_function_call(functions, service_operations)
+
+    # Step 3: Hitung jumlah total pemanggilan metode dalam service
+    total_invoked = sum(len(called_methods) for called_methods in clients.values())
+
+    # Step 4: Hitung jumlah total klien dan operasi service
+    total_clients = len(clients)
+    total_operations = len(service_operations)
+
+    # Step 5: Hitung SIUC menggunakan rumus
+    siuc = total_invoked / (total_clients * total_operations) if total_clients > 0 and total_operations > 0 else 0
+    return siuc, total_invoked, total_clients, total_operations
+
+def get_all_function_call(functions, service_operations):
+    clients = defaultdict(set)
+    for client, details in functions.items():
+        for call in details["called_methods"]:
+            if call["method"] in service_operations:
+                clients[client].add(call["method"])
+
+    return clients
+
+def calculate_sisc(functions, service_operations):
+    seq_call = get_all_function_seq_call(functions, service_operations)
+
+    # Step 3: Hitung jumlah total pasangan metode yang dipanggil secara sekuensial
+    seq_connected = sum(len(called_set) for called_set in seq_call.values())
+
+    # Step 4: Hitung jumlah total kombinasi pasangan metode dalam service
+    total_combinations = len(list(combinations(service_operations, 2)))
+
+    # Step 5: Hitung SISC menggunakan rumus
+    sisc = seq_connected / total_combinations if total_combinations > 0 else 0
+
+    return sisc, seq_connected, total_combinations
+
+
+def get_all_function_seq_call(functions, service_operations):
+    # Step 2: Identifikasi pemanggilan metode secara berurutan
+    sequential_calls = defaultdict(set)  # Dictionary untuk menyimpan sequential calls
+
+    for function_name, details in functions.items():
+        called_methods = [call["method"] for call in details["called_methods"] if call["method"] in service_operations]
+
+        # Jika ada lebih dari satu metode dipanggil dalam satu function, kita anggap sequential
+        for i in range(len(called_methods) - 1):
+            # print(function_name, called_methods[i], called_methods[i+1])
+            sequential_calls[called_methods[i]].add(called_methods[i + 1])
+
+    return sequential_calls
+
+def calculate_siic(functions, service_operations):
+    shared_calls = get_all_function_shared_call(functions, service_operations)
+    print(shared_calls)
+
+    IC_s = sum(1 for count in shared_calls.values() if count > 1)
+    total_operation = len(service_operations)
+
+    siic = IC_s / total_operation if total_operation > 0  else 0
+    return siic, IC_s, total_operation
+
+def calculate_tics(SIDC, SIUC, SIIC, SISC):
+    return (SIDC + SIUC + SIIC + SISC)/4
+
+def get_all_function_shared_call(functions, service_operations):
+    # Step 2: Identifikasi pemanggilan metode secara berurutan
+    shared_call = defaultdict(set)  # Dictionary untuk menyimpan sequential calls
+
+    for function_name, details in functions.items():
+        called_methods = [call["method"] for call in details["called_methods"] if call["method"] in service_operations]
+
+        # Jika ada lebih dari satu metode dipanggil dalam satu function, kita anggap sequential
+        for called_method in called_methods:
+            if shared_call[called_method]:
+                shared_call[called_method] += 1
+            else:
+                shared_call[called_method] = 1
+
+    return shared_call
+
+def get_func_body(functions):
+    methods = []
+
+    # Ekstrak method signature dan body
+    for func_name, func_data in functions.items():
+        params = []
+        # print(func_data)
+        for param_name, param_type in func_data['local_vars'].items():
+            if param_name == 'Parameter':
+                for param in param_type:
+                    params.append(param['type'])
+
+        method_signature = f"{func_name}({', '.join([param for param in params])})"
+        method_body = str(func_data)
+        methods.append((method_signature, method_body))
+
+    return methods
+
+# Latih model Doc2Vec untuk menghasilkan vektor representasi dari methods
+def train_doc2vec(methods):
+    tagged_data = [TaggedDocument(words=method_body.split(), tags=[method_signature]) for method_signature, method_body in methods]
+    model = Doc2Vec(vector_size=100, window=2, min_count=1, workers=4, epochs=100)
+    model.build_vocab(tagged_data)
+    model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
+    return model
+
+# Fungsi untuk menghitung COSM menggunakan cosine similarity
+def compute_cosm_cosine(method1, method2, model):
+    vector1 = model.infer_vector(method1.split())
+    vector2 = model.infer_vector(method2.split())
+    similarity = cosine_similarity([vector1], [vector2])[0][0]
+    return similarity
+
+# Fungsi untuk menghitung COSM menggunakan euclidean distance
+def compute_cosm_euclidean(method1, method2, model):
+    vector1 = model.infer_vector(method1.split())
+    vector2 = model.infer_vector(method2.split())
+    euclidean_distance = np.linalg.norm(vector1 - vector2)
+    similarity = 1 / (1 + euclidean_distance)
+    return similarity
+
+def calculate_COSM(model, method_body, similarity_func=compute_cosm_cosine):
+    # Pilih dua method yang ingin dibandingkan, misalnya method pertama dan kedua
+    method1 = method_body[0][1]  # Method body dari method pertama
+    method2 = method_body[1][1]  # Method body dari method kedua
+
+    # Hitung COSM menggunakan cosine similarity
+    return similarity_func(method1, method2, model)
+
+def extract_similarity(model, method_body, similarity_func=compute_cosm_cosine):
+    n = len(method_body)
+
+    # Hitung matriks similarity (sim_matrix)
+    sim_matrix = np.zeros((n, n))
+    pair_indices = list(combinations(range(n), 2))
+    for i, j in pair_indices:
+        sim = similarity_func(method_body[i][1], method_body[j][1], model)
+        sim_matrix[i, j] = sim
+        sim_matrix[j, i] = sim  # matriks simetri
+
+    return sim_matrix, pair_indices
+
+def calculate_ACOSM(sim_matrix, pair_indices):
+    return np.mean([sim_matrix[i, j] for i, j in pair_indices])
+
+def calculate_CCOC(acosm_value):
+    # Jika ACOSM > 0, maka COCC = ACOSM, jika tidak, COCC = 0.
+    return acosm_value if acosm_value > 0 else 0
+
+def calculate_LCOSM(sim_matrix, pair_indices, ACOSM):
+    # Bentuk himpunan M untuk setiap metode: M[i] = { j | j != i dan sim_matrix[i,j] > acosm }
+    M = []
+    n, _ = sim_matrix.shape
+    for i in range(n):
+        similar_set = set()
+        for j in range(n):
+            if i != j and sim_matrix[i, j] > ACOSM:
+                similar_set.add(j)
+        M.append(similar_set)
+
+    # Bentuk himpunan P dan Q: untuk setiap pasangan (i, j) dengan i < j
+    P = []
+    Q = []
+    for i, j in pair_indices:
+        if M[i].intersection(M[j]) == set():
+            P.append((i, j))
+        else:
+            Q.append((i, j))
+
+    total_pairs = len(pair_indices)
+
+    # Hitung LCOSM sesuai definisi
+    if len(P) > len(Q):
+        LCOSM = (len(P) - len(Q)) / total_pairs
+    else:
+        LCOSM = 0
+
+    details = {
+        'M_sets': M,
+        'P_pairs': P,
+        'Q_pairs': Q
+    }
+    return LCOSM, details
+
+
+
+## ------------------------------------------------------------------- ##
+'''Run command'''
+# tree_contents = java._extract_from_dir("./java/rs", java._parse_tree_content, "java")
+# print(tree_contents)
+# variable_func = java._parse_function_variable(tree_contents)
+# print(json.dumps(variable_func, indent=2))
+
+# tree_contents = py._extract_from_dir("./py/rs", py._parse_tree_content, "py")
+# print(tree_contents)
+# variable_func = py._parse_function_variable(tree_contents)
+# print(json.dumps(variable_func, indent=2))
+
+# tree_contents = js._extract_from_dir("./js/rs", js._parse_tree_content, "js")
+# print(tree_contents)
+# variable_func = js._parse_function_variable(tree_contents)
+# print(json.dumps(variable_func, indent=2))
+
+tree_contents = php._extract_from_dir("./php/rs", php._parse_tree_content, "php")
+# print(tree_contents)
+variable_func = php._parse_function_variable(tree_contents)
+# print(json.dumps(variable_func, indent=2))
+
+# all_params = get_all_params(variable_func["functions"])
+# print(all_params)
+
+# unique_params = get_unique_params(variable_func["functions"])
+# print(unique_params)
+
+# all_func = get_all_func(variable_func["functions"])
+# print(all_func)
+
+# lcom = calculate_lcom(len(all_params), len(unique_params), len(all_func))
+# print(lcom)
+
+# lcom4 = calculate_lcom4(variable_func["functions"])
+# print(lcom4)
+
+# all_get_set_func = get_all_get_set_func((variable_func["functions"]))
+# print(all_get_set_func)
+
+# all_func_params_type = get_all_func_params_type(variable_func["functions"])
+# print(all_func_params_type)
+
+# all_func_params_type_without_get_set = get_all_func_params_type_without_get_set(variable_func["functions"], all_get_set_func)
+# print(all_func_params_type_without_get_set)
+
+# all_func_return_type = get_all_func_return_type(variable_func["functions"])
+# print(all_func_return_type)
+
+# all_func_return_type_without_get_set = get_all_func_return_type_without_get_set(variable_func["functions"], all_get_set_func)
+# print(all_func_return_type_without_get_set)
+
+# sidc = calculate_sidc1(all_func_params_type, all_func_return_type)
+# print(sidc)
+
+# service_operations = get_all_function(variable_func["functions"])
+# print(service_operations)
+# siuc = calculate_siuc(variable_func["functions"], service_operations)
+# print(siuc)
+
+# sisc = calculate_sisc(variable_func["functions"], service_operations)
+# print(sisc)
+
+# siic = calculate_siic(variable_func["functions"], service_operations)
+# print(siic)
+
+# tics = calculate_tics(sidc[0], siuc[0], siic[0], sisc[0])
+# print(tics)
+
+# method_body = get_func_body(variable_func["functions"])
+# print(method_body)
+# model = train_doc2vec(method_body)
+# sim_matrix, pair_indices = extract_similarity(model, method_body, compute_cosm_cosine)
+
+# ACOSM = calculate_ACOSM(sim_matrix, pair_indices)
+# print(ACOSM)
+
+# CCOC = calculate_CCOC(ACOSM)
+# print(CCOC)
+
+# LCOSM, detail = calculate_LCOSM(sim_matrix, pair_indices, ACOSM)
+# print(LCOSM)
+
+
+
+
+
+
