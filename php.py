@@ -100,6 +100,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
     }
 
     return variable_func
+
 def get_global_variables(node, scope):
     """Mencari variabel global dalam PHP"""
     global_vars = {}
@@ -520,8 +521,8 @@ def get_return_type(node, local_vars, global_vars, type=''):
 
 PHP_LANGUAGE = Language('build/my-languages.so', 'php')
 
-# tree_contents = _extract_from_dir("./php/rs", _parse_tree_content, "php")
-# print(tree_contents)
-# variable_func = _parse_function_variable(tree_contents)
+tree_contents = _extract_from_dir("./php/rs", _parse_tree_content, "php")
+print(tree_contents)
+variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func['global_vars'], indent=2))
 # print(json.dumps(variable_func['functions'], indent=2))
