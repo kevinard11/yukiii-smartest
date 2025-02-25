@@ -1,7 +1,7 @@
 import javalang
 import networkx as nx
 import os
-import java, py, js, php
+import java, py, js, php, go
 import json
 
 from collections import defaultdict
@@ -46,7 +46,7 @@ def get_all_func(functions):
     return all_func
 
 def calculate_lcom(total_all_params, total_unique_params, total_all_func):
-    print(total_all_params, total_unique_params, total_all_func)
+    # print(total_all_params, total_unique_params, total_all_func)
     return 1 - (total_all_params / (total_unique_params * total_all_func)) if (total_unique_params * total_all_func) > 0 else 0
 
 def get_all_func_params(functions):
@@ -196,6 +196,7 @@ def calculate_siuc(functions, service_operations):
 def get_all_function_call(functions, service_operations):
     clients = defaultdict(set)
     for client, details in functions.items():
+        # print(client, details)
         for call in details["called_methods"]:
             if call["method"] in service_operations:
                 clients[client].add(call["method"])
@@ -233,7 +234,7 @@ def get_all_function_seq_call(functions, service_operations):
 
 def calculate_siic(functions, service_operations):
     shared_calls = get_all_function_shared_call(functions, service_operations)
-    print(shared_calls)
+    # print(shared_calls)
 
     IC_s = sum(1 for count in shared_calls.values() if count > 1)
     total_operation = len(service_operations)
@@ -269,6 +270,7 @@ def get_func_body(functions):
         # print(func_data)
         for param_name, param_type in func_data['local_vars'].items():
             if param_name == 'Parameter':
+                # print(func_name, param_type)
                 for param in param_type:
                     params.append(param['type'])
 
@@ -364,13 +366,22 @@ def calculate_LCOSM(sim_matrix, pair_indices, ACOSM):
     }
     return LCOSM, details
 
+def _calculate_lcom(functions):
+    all_params = get_all_params(functions)
+    unique_params = get_unique_params(functions)
+    all_func = get_all_func(functions)
+    lcom = calculate_lcom(len(all_params), len(unique_params), len(all_func))
+    
+    return lcom
+
 
 
 ## ------------------------------------------------------------------- ##
 '''Run command'''
-# tree_contents = java._extract_from_dir("./java/rs", java._parse_tree_content, "java")
+lang = 'go'
+# tree_contents = go._extract_from_dir(f'./{lang}/rs', go._parse_tree_content, lang)
 # print(tree_contents)
-# variable_func = java._parse_function_variable(tree_contents)
+# variable_func = go._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
 
 # tree_contents = py._extract_from_dir("./py/rs", py._parse_tree_content, "py")
@@ -383,9 +394,14 @@ def calculate_LCOSM(sim_matrix, pair_indices, ACOSM):
 # variable_func = js._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
 
-tree_contents = php._extract_from_dir("./php/rs", php._parse_tree_content, "php")
+# tree_contents = php._extract_from_dir("./php/rs", php._parse_tree_content, "php")
 # print(tree_contents)
-variable_func = php._parse_function_variable(tree_contents)
+# variable_func = php._parse_function_variable(tree_contents)
+# print(json.dumps(variable_func, indent=2))
+
+# tree_contents = go._extract_from_dir("./go/test", go._parse_tree_content, "go")
+# print(tree_contents)
+# variable_func = go._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
 
 # all_params = get_all_params(variable_func["functions"])

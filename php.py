@@ -100,6 +100,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
     }
 
     return variable_func
+
 def get_global_variables(node, scope):
     """Mencari variabel global dalam PHP"""
     global_vars = {}
