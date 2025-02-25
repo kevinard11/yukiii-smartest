@@ -43,7 +43,7 @@ def get_value(node):
         return int(node.text.decode())
     elif node.type == 'literal_element':
         return get_value(node.children[0])
-    elif node.type in ['true', 'false', 'interpreted_string_literal', 'rune_literal', 'identifier', 'selector_expression']:
+    elif node.type in ['true', 'false', 'interpreted_string_literal', 'rune_literal', 'identifier', 'selector_expression', 'type_identifier', 'index_expression']:
         return node.text.decode()
     elif node.type == 'float_literal':
         return float(node.text.decode())
@@ -72,14 +72,16 @@ def get_value(node):
         for child in node.children:
             if child.type == 'selector_expression':
                 selector = child.text.decode().split('.')
-                qualifier = selector[-1]
-                function_name = '.'.join(selector[:-1])
+                function_name = selector[-1]
+                qualifier = '.'.join(selector[:-1])
             elif child.type == 'identifier':
                 function_name = get_value(child)
             elif child.type == 'argument_list':
                 for child2 in child.children[1:-1]:
                     if child2.text.decode() != ',':
                         arguments_nodes.append(get_value(child2))
+
+        # print(function_name, qualifier, arguments_nodes)
 
         return {
             "method": function_name,
@@ -99,10 +101,25 @@ def get_value(node):
         right = get_value(node.child(2))
         return f"({left} {operator} {right})"
 
+    elif node.type == 'type_assertion_expression':
+        qualifier = ''
+        function_name = ''
+        arguments_nodes = []
+
+        for child in node.children:
+            if child.type == 'identifier':
+                function_name = get_value(child)
+            elif child.type == 'index_expression':
+                function_name = get_value(child)
+            else:
+                # argument = get_value(child)
+                arguments_nodes.append(child.text.decode())
+        return {
+            "method": function_name,
+            "arguments": "".join(arguments_nodes[2:-1]),
+            "qualifier": qualifier
+        }
     return None
-
-
-
 
 def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
@@ -110,23 +127,16 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
     functions = {}
 
     for key, tree in tree_contents.items():
-        # global_var = get_global_variables(tree.root_node, key)
-        # global_vars.update(global_var)
+        global_var = get_global_variables(tree.root_node, key)
+        global_vars.update(global_var)
 
         # called_method = get_global_called_methods(tree.root_node, key)
         # global_vars[f"{key}.called_methods"] = (called_method)
 
-        function = get_functions(tree.root_node, global_vars, key)
+        function = get_functions(tree.root_node, key)
+        # print(function)
+
         functions.update(function)
-
-    # for key, tree in tree_contents.items():
-    #     function = get_functions(tree.root_node, global_vars, key)
-    #     # print(function)
-    #     function1 = get_class_functions(tree.root_node, global_vars, key)
-    #     # print(function1)
-
-        # functions.update(function)
-        # functions.update(function1)
 
     variable_func = {
         'global_vars': global_vars,
@@ -164,6 +174,7 @@ def get_global_variables(head_node, scope):
         if node.type == "var_declaration":  # Global variable
 
             for child in node.children:
+                # print(child)
                 if child.type == 'var_spec':
                     var_name, var_value = get_var_spec_name_value(child)
                     global_vars[f"{scope}.{var_name}"] = var_value
@@ -174,9 +185,6 @@ def get_global_variables(head_node, scope):
                             var_name, var_value = get_var_spec_name_value(child1)
                             global_vars[f"{scope}.{var_name}"] = var_value
                             # print(var_name, var_value)
-
-                elif child.type == 'expression_list':
-                    print(child.children)
         elif node.type =='expression_statement':
             for child in node.children:
                 if child.type == 'call_expression':
@@ -184,7 +192,7 @@ def get_global_variables(head_node, scope):
                     called_methods.append(called_method)
 
         elif node.type == "assignment_statement":  # Assignment (logger = LoggerFactory.getLogger(...))
-            var_name = node.children[0].text.decode("utf8")
+            var_name = node.children[0].text.decode()
             value_node = node.children[-1]
             value = extract_method_call(value_node) if value_node else value_node.text.decode("utf8") if value_node else None
 
@@ -216,12 +224,11 @@ def get_global_variables(head_node, scope):
                                                 global_vars[f"{struct_name}.{var_name}"] = var_value
 
 
-    global_vars[f"{scope}.'called_methods'"] = called_methods
+    global_vars[f"{scope}.called_methods"] = called_methods
     return global_vars
 
 
 def extract_method_call(node):
-    """ Mengekstrak method call seperti LoggerFactory.getLogger(Controller.class) """
     if node.type == "call_expression":
         method_node = node.child_by_field_name("function")
         args_node = node.child_by_field_name("arguments")
@@ -242,14 +249,22 @@ def extract_method_call(node):
             }
     return None
 
-def get_functions(head_node, global_vars, scope):
+def get_type_value(node):
+    if node.type in ['type_identifier', 'pointer_type', 'qualified_type']:
+        return node.text.decode()
+    elif node.type == 'slice_type':
+        return'array'
+    elif node.type == 'map_type':
+        return 'map'
+
+def get_functions(head_node, scope):
 
     functions = {}
-    called_methods = {}
 
     for node in head_node.children:
         full_func_name = ''
         local_vars = {}
+        called_methods = []
 
         if node.type == 'function_declaration':
             params = []
@@ -268,13 +283,10 @@ def get_functions(head_node, global_vars, scope):
                                 name = None
                                 # print(child.text.decode(), child1.children)
                                 for child2 in child1.children:
-                                    # print(child1.text.decode(), child2)
                                     if child2.type == 'identifier':
                                         name = child2.text.decode()
-                                    elif child2.type == 'type_identifier':
-                                        type = child2.text.decode()
-                                    elif child2.type == 'pointer_type':
-                                        type = child2.text.decode()
+                                    else:
+                                        type = get_type_value(child2)
                                 res = {
                                     'type': type,
                                     'name': name
@@ -287,24 +299,25 @@ def get_functions(head_node, global_vars, scope):
                         for child1 in child.children:
                             if child1.type == 'parameter_declaration':
                                 type = None
-                                name = None
                                 # print(child.text.decode(), child1.children)
                                 for child2 in child1.children:
                                     # print(child1.text.decode(), child2)
-                                    if child2.type in ['type_identifier', 'pointer_type']:
-                                        type = child2.text.decode()
+                                    type = get_type_value(child1)
                                 res = res = {
                                     'type': type
                                 }
                                 # print(res)
                                 return_type.append(res)
-                elif child.type  in ['qualified_type', 'pointer_type']:
+                elif child.type  in ['qualified_type', 'pointer_type', 'type_identifier']:
                     return_type.append({
                                     'type': child.text.decode()
                                 })
                     # print(child.children)
+                elif child.type == 'block':
+                    get_blocks(child, local_vars, called_methods,full_func_name)
 
                 local_vars['Return'] = return_type
+
         elif node.type == 'method_declaration':
             # print(node.children) # parameter_list field_identifier pointer_type/qualified_type block params = []
             return_type = []
@@ -361,7 +374,7 @@ def get_functions(head_node, global_vars, scope):
                     full_func_name = f"{full_func_name}.{child.text.decode()}"
                     # print(full_func_name)
 
-                elif child.type  in ['qualified_type', 'pointer_type']:
+                elif child.type  in ['qualified_type', 'pointer_type', 'type_identifier']:
                     return_type.append({
                                     'type': child.text.decode()
                                 })
@@ -375,18 +388,58 @@ def get_functions(head_node, global_vars, scope):
         if full_func_name:
             functions[full_func_name] = {
                 key: value for key, value in {
-                    "local_vars": local_vars if local_vars else None,
-                    "called_methods": called_methods if called_methods else None
+                    "local_vars": local_vars,
+                    "called_methods": called_methods
                 }.items() if value is not None
             }
 
     return functions
 
+def get_blocks(node, local_vars, called_methods, full_func_name):
+    if node.type == 'block':
+        for child1 in node.children:
+            # print(child1)
+            if child1.type in ['assignment_statement', 'short_var_declaration']:
+                for child2 in child1.children:
+                    # print(child2)
+                    if child2.type == 'expression_list':
+                        var_value = None
+                        # print(child2.text.decode())
+                        for child3 in child2.children:
+                            # print(child3)
+                            if child3.type == 'identifier':
+                                full_func_name = child3.text.decode()
+                            else:
+                                var_value = get_value(child3)
+
+                            if child3.type == 'call_expression':
+                                res = get_value(child3)
+                                res['assigned_to'] = full_func_name
+                                called_methods.append(res)
+                        # print(full_func_name, var_value)
+                        local_vars[full_func_name] = var_value
+
+            elif child1.type in ['expression_statement', 'defer_statement']:
+                for child2 in child1.children:
+                    if child2.type == 'call_expression':
+                        res = get_value(child2)
+                        called_methods.append(get_value(child2))
+            elif child1.type == 'for_statement':
+                for child2 in child1.children:
+                    if child2.type == 'block':
+                        get_blocks(child2, local_vars, called_methods, full_func_name)
+            elif child1.type == 'if_statement':
+                for child2 in child1.children:
+                    if child2.type == 'call_expression':
+                        called_methods.append(get_value(child2))
+                    if child2.type == 'block':
+                        get_blocks(child2, local_vars, called_methods, full_func_name)
 
 GO_LANGUAGE = Language('build/my-languages.so', 'go')
 
-tree_contents = _extract_from_dir("./go/test", _parse_tree_content, "go")
+# tree_contents = _extract_from_dir("./go/rs", _parse_tree_content, "go")
 # print(tree_contents)
-variable_func = _parse_function_variable(tree_contents)
+# variable_func = _parse_function_variable(tree_contents)
+# print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
-print(json.dumps(variable_func['functions'], indent=2))
+# print(json.dumps(variable_func['functions'], indent=2))
