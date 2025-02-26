@@ -71,9 +71,25 @@ func processSale(parentSpan ot.Span) {
 	// 	span.LogFields(otlog.String("info", "Order sent for processing"))
 	// 	time.Sleep(time.Duration(42+rand.Int63n(42)) * time.Millisecond)
 	// }
-	if bar() {
-		m := f.(map[string]interface{})
-		id = m["orderid"].(string)
+	// if bar() {
+	// 	m := f.(map[string]interface{})
+	// 	id = m["orderid"].(string)
+	// } else if tes(){
+	// 	fmt.Println("asda")
+	// } else {
+	// 	fmt.Println("eaaaaa")
+	// }
+
+	for i := 0; i < 5; i++ {
+		fmt.Println("Iteration:", i)
+		if bar() {
+			m := f.(map[string]interface{})
+			id = m["orderid"].(string)
+		} else if tes(){
+			fmt.Println("asda")
+		} else {
+			fmt.Println("eaaaaa")
+		}
 	}
 }
 

@@ -276,6 +276,7 @@ def get_class_functions(node, global_vars, scope):
                             full_function_name = scope
                             not_get_return = True
                             for child3 in child2.children:
+                                # print(child3)
                                 if child3.type == 'name':
                                     full_function_name = f'{full_function_name}.{child3.text.decode()}'
 
@@ -296,7 +297,6 @@ def get_class_functions(node, global_vars, scope):
                                             # print(full_function_name, local_vars)
                                         elif child4.type == 'compound_statement':
                                             for child5 in child4.children:
-
                                                 if child5.type == 'expression_statement':
                                                     loc = get_local_variables(child5)
                                                     called_methods.extend(get_called_methods(child5))
@@ -321,7 +321,12 @@ def get_class_functions(node, global_vars, scope):
                                                                     if not_get_return:
                                                                         return_type = get_return_type(child6, local_vars, global_vars, 'class')
                                                                         local_vars["Return"] = return_type
-
+                                                elif child5.type == 'if_statement':
+                                                    get_if_functions(child5, called_methods, global_vars, local_vars, not_get_return)
+                                                elif child5.type == 'while_statement':
+                                                    get_while_functions(child5, called_methods, global_vars, local_vars, not_get_return)
+                                                elif child5.type == 'for_statement':
+                                                    get_for_functions(child5, called_methods, global_vars, local_vars, not_get_return)
 
                                         functions[full_function_name] = {
                                             "local_vars": local_vars,
@@ -329,6 +334,57 @@ def get_class_functions(node, global_vars, scope):
                                         }
 
     return functions
+
+def get_if_functions(child, called_methods, global_vars, local_vars, not_get_return):
+    if child.type == 'if_statement':
+        get_if_while_for_function(child, called_methods, global_vars, local_vars, not_get_return)
+
+def get_while_functions(child, called_methods, global_vars, local_vars, not_get_return):
+    if child.type == 'while_statement':
+        get_if_while_for_function(child, called_methods, global_vars, local_vars, not_get_return)
+
+def get_for_functions(child, called_methods, global_vars, local_vars, not_get_return):
+    if child.type == 'for_statement':
+        get_if_while_for_function(child, called_methods, global_vars, local_vars, not_get_return)
+
+def get_if_while_for_function(child, called_methods, global_vars, local_vars, not_get_return):
+    for child6 in child.children:
+        # print(child6)
+        if child6.type == 'parenthesized_expression':
+            for child7 in child6.children:
+                if child7.type == 'expression_statement':
+                    loc = get_local_variables(child7)
+                    called_methods.extend(get_called_methods(child7))
+                    local_vars.update(loc)
+        elif child6.type == 'compound_statement':
+            for child7 in child6.children:
+                # print(child7)
+                if child7.type == 'expression_statement':
+                    loc = get_local_variables(child7)
+                    called_methods.extend(get_called_methods(child7))
+                    local_vars.update(loc)
+                elif child7.type == 'return_statement':
+                    # print(child4.children)
+                    if not_get_return:
+                        return_type = get_return_type(child6, local_vars, global_vars, 'class')
+                        local_vars["Return"] = return_type
+        elif child6.type == 'else_clause':
+            # print(child6.children)
+            for child7 in child6.children:
+                if child7.type == 'if_statement':
+                    get_if_functions(child7, called_methods, global_vars, local_vars, not_get_return)
+                elif child7.type == 'compound_statement':
+                    for child8 in child7.children:
+                        print(child8)
+                        if child8.type == 'expression_statement':
+                            loc = get_local_variables(child8)
+                            called_methods.extend(get_called_methods(child8))
+                            local_vars.update(loc)
+                        elif child8.type == 'return_statement':
+                            # print(child4.children)
+                            if not_get_return:
+                                return_type = get_return_type(child6, local_vars, global_vars, 'class')
+                                local_vars["Return"] = return_type
 
 def get_functions(node, global_vars, scope):
     """Menemukan semua fungsi dalam kode JavaScript"""
@@ -521,7 +577,7 @@ def get_return_type(node, local_vars, global_vars, type=''):
 
 PHP_LANGUAGE = Language('build/my-languages.so', 'php')
 
-# tree_contents = _extract_from_dir("./php/rs", _parse_tree_content, "php")
+# tree_contents = _extract_from_dir("./php/test", _parse_tree_content, "php")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func['global_vars'], indent=2))
