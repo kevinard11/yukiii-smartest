@@ -371,17 +371,18 @@ def _calculate_lcom(functions):
     unique_params = get_unique_params(functions)
     all_func = get_all_func(functions)
     lcom = calculate_lcom(len(all_params), len(unique_params), len(all_func))
-    
+
     return lcom
 
-
+def _calculate_lcom4(functions):
+    return calculate_lcom4(functions)
 
 ## ------------------------------------------------------------------- ##
 '''Run command'''
-lang = 'go'
-# tree_contents = go._extract_from_dir(f'./{lang}/rs', go._parse_tree_content, lang)
+lang = 'java'
+# tree_contents = java._extract_from_dir("C://Users//ARD//Desktop//robot-shop", java._parse_tree_content, lang)
 # print(tree_contents)
-# variable_func = go._parse_function_variable(tree_contents)
+# variable_func = java._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
 
 # tree_contents = py._extract_from_dir("./py/rs", py._parse_tree_content, "py")

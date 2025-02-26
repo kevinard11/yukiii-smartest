@@ -428,16 +428,25 @@ def get_blocks(node, local_vars, called_methods, full_func_name):
                 for child2 in child1.children:
                     if child2.type == 'block':
                         get_blocks(child2, local_vars, called_methods, full_func_name)
+                    if child2.type == 'if_statement':
+                        get_ifelse_while_for(child2, local_vars, called_methods, full_func_name)
             elif child1.type == 'if_statement':
-                for child2 in child1.children:
-                    if child2.type == 'call_expression':
-                        called_methods.append(get_value(child2))
-                    if child2.type == 'block':
-                        get_blocks(child2, local_vars, called_methods, full_func_name)
+                get_ifelse_while_for(child1, local_vars, called_methods, full_func_name)
+
+def get_ifelse_while_for(node, local_vars, called_methods, full_func_name):
+    if node.type == 'if_statement':
+        # print(node.children)
+        for child in node.children:
+            if child.type == 'call_expression':
+                called_methods.append(get_value(child))
+            if child.type == 'block':
+                get_blocks(child, local_vars, called_methods, full_func_name)
+            elif child.type == 'if_statement':
+                get_ifelse_while_for(child, local_vars, called_methods, full_func_name)
 
 GO_LANGUAGE = Language('build/my-languages.so', 'go')
 
-# tree_contents = _extract_from_dir("./go/rs", _parse_tree_content, "go")
+# tree_contents = _extract_from_dir("./go/test", _parse_tree_content, "go")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))

@@ -72,8 +72,8 @@ def get_global_variables(node, scope):
             if expr.type == "assignment_expression":
                 var_name = expr.child_by_field_name("left")
                 var_value = expr.child_by_field_name("right")
+                full_var_name = f"{scope}.{var_name.text.decode()}"
                 if var_name and not is_inside_function(child):
-                    full_var_name = f"{scope}.{var_name.text.decode()}"
                     # Jika variabel adalah hasil pemanggilan fungsi
                     if var_value and var_value.type == "call_expression":
                         function_name_node = var_value.child_by_field_name("function")
@@ -114,29 +114,29 @@ def get_global_variables(node, scope):
                             global_vars[full_var_name] = None
 
                 if var_value and var_value.type == "member_expression":
-                        # print(var_value.type == "member_expression")
+                    # print(var_value.type == "member_expression")
 
-                        object_node = var_value.child_by_field_name("object")
-                        property_node = var_value.child_by_field_name("property")
+                    object_node = var_value.child_by_field_name("object")
+                    property_node = var_value.child_by_field_name("property")
 
-                        # Pastikan object adalah hasil require()
-                        if object_node and object_node.type == "call_expression":
-                            function_node = object_node.child_by_field_name("function")
-                            arguments_node = object_node.child_by_field_name("arguments")
-                            qualifier = None
+                    # Pastikan object adalah hasil require()
+                    if object_node and object_node.type == "call_expression":
+                        function_node = object_node.child_by_field_name("function")
+                        arguments_node = object_node.child_by_field_name("arguments")
+                        qualifier = None
 
-                            if function_node:
-                                function_name = function_node.text.decode()
-                                if "." in function_name:
-                                    parts = function_name.split(".")
-                                    qualifier = ".".join(parts[:-1])
-                                    function_name = parts[-1]
+                        if function_node:
+                            function_name = function_node.text.decode()
+                            if "." in function_name:
+                                parts = function_name.split(".")
+                                qualifier = ".".join(parts[:-1])
+                                function_name = parts[-1]
 
-                                global_vars[full_var_name] = {
-                                    "method": function_name,
-                                    "arguments": arguments_node.text.decode(),
-                                    "qualifier": qualifier
-                                }
+                            global_vars[full_var_name] = {
+                                "method": function_name,
+                                "arguments": arguments_node.text.decode(),
+                                "qualifier": qualifier
+                            }
 
         elif child.type == "variable_declaration" or child.type == 'lexical_declaration':
             for declarator in child.children:
@@ -610,7 +610,7 @@ def get_argument_details(arg_node):
 
 JS_LANGUAGE = Language('build/my-languages.so', 'javascript')
 
-# tree_contents = _extract_from_dir("./js/test", _parse_tree_content, "js")
+# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//robot-shop", _parse_tree_content, "js")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
