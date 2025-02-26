@@ -43,3 +43,17 @@ app.use((req, res, next) => {
     res.set('Access-Control-Allow-Origin', '*');
     next();
 });
+// all categories
+app.get('/categories', (req, res) => {
+    if(mongoConnected) {
+        collection.distinct('categories').then((categories) => {
+            res.json(categories);
+        }).catch((e) => {
+            req.log.error('ERROR', e);
+            res.status(500).send(e);
+        });
+    } else {
+        req.log.error('database not available');
+        res.status(500).send('database not available');
+    }
+});

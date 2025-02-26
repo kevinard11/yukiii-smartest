@@ -92,7 +92,19 @@ def get_all_class(functions):
     return {item.rsplit('.', 1)[0] for item in functions.keys()}
 
 def get_all_function(functions):
-    return {item.rsplit('.', 1)[-1] for item in functions.keys()}
+    function = {item.rsplit('.', 1)[-1] for item in functions.keys()}
+    return function
+
+def get_all_other_function(functions):
+    function = {item.rsplit('.', 1)[-1] for item in functions.keys()}
+
+    for item in functions.values():
+        if 'called_methods' in item.keys():
+            for fun in item['called_methods']:
+                function.update(fun['method'])
+
+    return function
+
 
 def get_function_name(function_path):
     return function_path.rsplit('.', 1)[-1]
@@ -155,25 +167,53 @@ def get_all_func_return_type(functions):
 
     return all_func
 
-def calculate_sidc1(method_params, method_return) -> Tuple[float, int, int, int]:
+def calculate_sidc1(method_param, method_return) -> Tuple[float, int, int, int]:
 
     """Menghitung SIDC1 berdasarkan parameter yang dibagikan antar metode."""
+    method_params = method_param.copy()
+    method_returns = method_return.copy()
 
-    # filtered_method_params = {k: v for k, v in method_params.items() if v}
-    # filtered_method_return = {k: v for k, v in method_return.items() if v}
+    clean_empty_keys(method_params, method_returns)
+
+    # method_params = {k: v for k, v in method_params.items() if v}
+    # method_returns = {k: v for k, v in method_returns.items() if v}
+    # print(method_params)
 
     # Hitung pasangan metode yang memiliki parameter input yang sama
     common_param = get_common_pair(method_params)
-    common_return = get_common_pair(method_return)
+    common_return = get_common_pair(method_returns)
     # print(common_param, "\n", common_return)
 
-    total_combinations = len(list(combinations(list(method_params.keys()), 2))) + len(list(combinations(list(method_return.keys()), 2))) # C(n,2) = n(n-1)/2
+    if len(common_param) == 0:
+        method_params = method_param
+        common_param = get_common_pair(method_params)
+
+        method_returns = method_return
+        common_return = get_common_pair(method_returns)
+
+    total_combinations = len(list(combinations(list(method_params.keys()), 2))) * 2
+    # total_combinations = len(list(combinations(list(method_params.keys()), 2))) + len(list(combinations(list(method_returns.keys()), 2))) # C(n,2) = n(n-1)/2
 
     sidc1 = (len(common_param) + len(common_return)) / total_combinations if total_combinations > 0 else 0
+    if sidc1 > 1:
+        sidc1 = 1
 
     return sidc1, len(common_param), len(common_return), total_combinations
 
+def clean_empty_keys(dict1, dict2):
+    """
+    Menghapus key yang memiliki list kosong di kedua dictionary.
+    """
+    keys_to_remove = [key for key in dict1 if not dict1[key] or key in dict2 and not dict2[key]]
+
+    for key in keys_to_remove:
+        dict1.pop(key, None)
+        dict2.pop(key, None)
+
+    return dict1, dict2
+
 def get_common_pair(list_pair):
+    # print(list_pair)
     return [
         (func1, func2) for func1, func2 in combinations(list_pair.keys(), 2)
         if (set(list_pair[func1]) & set(list_pair[func2])) or (list_pair[func1] == [] and list_pair[func2] == [])
@@ -232,9 +272,8 @@ def get_all_function_seq_call(functions, service_operations):
 
     return sequential_calls
 
-def calculate_siic(functions, service_operations):
-    shared_calls = get_all_function_shared_call(functions, service_operations)
-    # print(shared_calls)
+def calculate_siic(functions, service_operations, other_service_operations):
+    shared_calls = get_all_function_shared_call(functions, service_operations, other_service_operations)
 
     IC_s = sum(1 for count in shared_calls.values() if count > 1)
     total_operation = len(service_operations)
@@ -245,19 +284,21 @@ def calculate_siic(functions, service_operations):
 def calculate_tics(SIDC, SIUC, SIIC, SISC):
     return (SIDC + SIUC + SIIC + SISC)/4
 
-def get_all_function_shared_call(functions, service_operations):
+def get_all_function_shared_call(functions, service_operations, other_service_operations):
     # Step 2: Identifikasi pemanggilan metode secara berurutan
     shared_call = defaultdict(set)  # Dictionary untuk menyimpan sequential calls
 
     for function_name, details in functions.items():
-        called_methods = [call["method"] for call in details["called_methods"] if call["method"] in service_operations]
+        if 'called_methods' in details.keys():
+            called_methods = [call["method"] for call in details["called_methods"] if call['method'] in service_operations]
 
-        # Jika ada lebih dari satu metode dipanggil dalam satu function, kita anggap sequential
-        for called_method in called_methods:
-            if shared_call[called_method]:
-                shared_call[called_method] += 1
-            else:
-                shared_call[called_method] = 1
+            # Jika ada lebih dari satu metode dipanggil dalam satu function, kita anggap sequential
+            for called_method in called_methods:
+                if shared_call[called_method]:
+                    shared_call[called_method] += 1
+                else:
+                    shared_call[called_method] = 1
+    # print(shared_call)
 
     return shared_call
 
@@ -377,33 +418,111 @@ def _calculate_lcom(functions):
 def _calculate_lcom4(functions):
     return calculate_lcom4(functions)
 
+def _calculate_lcom5(variable_func):
+    variables = variable_func["global_vars"]
+    # print(variables)
+    functions = variable_func["functions"].copy()
+    lcom5_class = {}
+
+    all_class = get_all_class(functions)
+    for class_name in all_class:
+
+        variable = {k: v for k,v in variables.items() if '.'.join(k.split('.')[:-1]) == class_name}
+        function = {k: v for k, v in functions.items() if '.'.join(k.split('.')[:-1]) == class_name}
+        lcom5 = calculate_lcom5(variable, function)
+        print(class_name, lcom5)
+        if lcom5[0] != float('inf'):
+            lcom5_class[class_name] = lcom5[0]
+
+    # print(lcom5_class)
+
+    average_lcom5 = sum(k for k in lcom5_class.values()) / len(lcom5_class)
+    return average_lcom5
+
+
+def calculate_lcom5(variable, function):
+
+    # Hitung jumlah akses unik ke atribut (a)
+    global_vars_key = [d.split('.')[-1] for d in variable.keys()]
+    accessed_attribute = {}
+    non_access_method = []
+
+    for method, details in function.items():
+        accessed_attribute_per_method = set()
+        if "called_methods" in details:
+            for call in details["called_methods"]:
+                if "arguments" in call:
+                    for argument in call["arguments"]:
+                        if argument in global_vars_key:
+                            accessed_attribute_per_method.add(argument)
+
+                # print(call['qualifier'].split('.')[0] if call['qualifier'] else call['qualifier'])
+
+                if "qualifier" in call and call['qualifier'] and call["qualifier"].split('.')[0] in global_vars_key:
+                    # print(call['qualifier'])
+                    accessed_attribute_per_method.add(call["qualifier"])
+
+        if 'local_vars' in details:
+            for var in details['local_vars'].keys():
+                if var in global_vars_key:
+                    accessed_attribute_per_method.add(var)
+
+        if accessed_attribute_per_method:
+            accessed_attribute[method] = accessed_attribute_per_method
+        else:
+            non_access_method.append(method)
+
+    # function = {k: v for k, v in function.items() if k not in non_access_method}
+
+    a = sum(len(v) for v in accessed_attribute.values())
+    l = len(variable)
+    k = len(function)
+
+    if k == 1 or l == 0:
+        a = 0
+        lcom5 = float('inf')
+    else:
+        if a == 0:
+            lcom5 = 1
+        else:
+            lcom5 = (a - (k*l)) / (l - (k*l)) if (l - (k*l)) != 0 else float('inf')
+            if lcom5 == -0.0:
+                lcom5 = 0
+
+    return lcom5, a, k, l
+
 ## ------------------------------------------------------------------- ##
 '''Run command'''
-lang = 'java'
+# lang = 'java'
 # tree_contents = java._extract_from_dir("C://Users//ARD//Desktop//robot-shop", java._parse_tree_content, lang)
-# print(tree_contents)
+# # print(tree_contents)
 # variable_func = java._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['global_vars'], indent=2))
 
-# tree_contents = py._extract_from_dir("./py/rs", py._parse_tree_content, "py")
+# tree_contents = py._extract_from_dir("C://Users//ARD//Desktop//robot-shop", py._parse_tree_content, "py")
 # print(tree_contents)
 # variable_func = py._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['global_vars'], indent=2))
 
-# tree_contents = js._extract_from_dir("./js/rs", js._parse_tree_content, "js")
+# tree_contents = js._extract_from_dir("C://Users//ARD//Desktop//robot-shop", js._parse_tree_content, "js")
 # print(tree_contents)
 # variable_func = js._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['global_vars'], indent=2))
 
-# tree_contents = php._extract_from_dir("./php/rs", php._parse_tree_content, "php")
+# tree_contents = php._extract_from_dir("C://Users//ARD//Desktop//robot-shop", php._parse_tree_content, "php")
 # print(tree_contents)
 # variable_func = php._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['global_vars'], indent=2))
 
-# tree_contents = go._extract_from_dir("./go/test", go._parse_tree_content, "go")
+# tree_contents = go._extract_from_dir("C://Users//ARD//Desktop//robot-shop", go._parse_tree_content, "go")
 # print(tree_contents)
 # variable_func = go._parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['global_vars'], indent=2))
 
 # all_params = get_all_params(variable_func["functions"])
 # print(all_params)
@@ -419,6 +538,10 @@ lang = 'java'
 
 # lcom4 = calculate_lcom4(variable_func["functions"])
 # print(lcom4)
+
+# lcom5 = calculate_lcom5(variable_func['global_vars'], variable_func['functions'])
+# lcom5 = _calculate_lcom5(variable_func)
+# print(lcom5)
 
 # all_get_set_func = get_all_get_set_func((variable_func["functions"]))
 # print(all_get_set_func)
@@ -439,14 +562,16 @@ lang = 'java'
 # print(sidc)
 
 # service_operations = get_all_function(variable_func["functions"])
+# other_service_operations = get_all_other_function(variable_func['functions'])
 # print(service_operations)
+# print(other_service_operations)
 # siuc = calculate_siuc(variable_func["functions"], service_operations)
 # print(siuc)
 
 # sisc = calculate_sisc(variable_func["functions"], service_operations)
 # print(sisc)
 
-# siic = calculate_siic(variable_func["functions"], service_operations)
+# siic = calculate_siic(variable_func["functions"], service_operations, other_service_operations)
 # print(siic)
 
 # tics = calculate_tics(sidc[0], siuc[0], siic[0], sisc[0])

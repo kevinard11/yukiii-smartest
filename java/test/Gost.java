@@ -3,9 +3,9 @@ package java.test;
 class Gost {
 
     private int why;
-    private String knapa;
-    private static final Logger logger = LoggerFactory.getLogger(Controller.class);
-    private UserService UserService;
+    // private String knapa;
+    // private static final Logger logger = LoggerFactory.getLogger(Controller.class);
+    private UserService userService;
 
     // public int getWhy() {
     //     return this.why;
@@ -47,14 +47,16 @@ class Gost {
     //     System.out.println("gooo");
     // }
 
-    // public void main(String[] args) {
-    //     foo();
-    //     try {
-    //         baz();
-    //     } catch(Exception e) {
-    //         e.printStackTrace();
-    //     }
-    // }
+    public void main(String[] args) {
+        foo();
+        why = 12;
+        userService.adsad();
+        try {
+            baz();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // public String findasd(int d, String[] dsda) {
     //     return "8";
@@ -66,7 +68,7 @@ class Gost {
 
     public List<Integer> findasdc() {
         int c;
-        if (d.equals(false, "asdas")) {
+        if (d.equals(why, "asdas")) {
             int c = 12;
             bar(args, "huaaa");
         }  else if (true) {
@@ -76,9 +78,11 @@ class Gost {
             int d = 20;
         }
 
+        why = 12;
         if (true) d = 10;
         int b = 0;
         this.getWhy("asdasda");
+        userService.sadasd('adas');
 
         while (x > 0) {
             int count = x - 1;

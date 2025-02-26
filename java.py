@@ -134,6 +134,84 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                     # print(statement)
 
                     # Cari variabel lokal
+                    if isinstance(statement, javalang.tree.StatementExpression):
+                        expression = statement.expression
+                        if isinstance(expression, javalang.tree.This):
+                            expression = expression.selectors[0]
+
+                        # Jika expression adalah pemanggilan metode
+                        if isinstance(expression, javalang.tree.MethodInvocation):
+                            method_name = expression.member
+                            qualifier = expression.qualifier if hasattr(expression, 'qualifier') else None
+                            # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in expression.arguments]
+                            method_args = []
+                            for arg in expression.arguments:
+                                if isinstance(arg, javalang.tree.This):
+                                    arg = arg.selectors[0]
+                                if isinstance(arg, javalang.tree.ClassReference):
+                                    method_args.append(arg.type.name+".class")
+                                elif isinstance(arg, javalang.tree.MemberReference):
+                                    method_args.append(arg.member)
+                                elif isinstance(arg, javalang.tree.Literal):
+                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+
+                            called_methods.append({
+                                "method": method_name,
+                                "arguments": method_args,
+                                "qualifier": qualifier
+                            })
+                            called_set.add((method_name, len(method_args), qualifier))
+                        elif isinstance(statement.expression, javalang.tree.Assignment):
+                            declarator = statement.expression
+
+                            if isinstance(declarator.expressionl, javalang.tree.MemberReference):
+                                var_name = declarator.expressionl.member
+
+                            initializer = declarator.value
+
+                            if isinstance(initializer, javalang.tree.This):
+                                initializer = initializer.selectors[0]
+
+                            # Jika initializer adalah pemanggilan metode
+                            if isinstance(initializer, javalang.tree.MethodInvocation):
+                                method_name = initializer.member
+                                qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
+                                # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
+                                method_args = []
+                                for arg in initializer.arguments:
+                                    if isinstance(arg, javalang.tree.This):
+                                        arg = arg.selectors[0]
+                                    if isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(arg.type.name+".class")
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        method_args.append(arg.member)
+                                    elif isinstance(arg, javalang.tree.Literal):
+                                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                local_vars[var_name] = {
+                                    "method": method_name,
+                                    "arguments": method_args
+                                }
+
+                                called_methods.append({
+                                    "method": method_name,
+                                    "arguments": method_args,
+                                    "qualifier": qualifier,
+                                    "assigned_to": var_name
+                                })
+                                called_set.add((method_name, len(method_args), qualifier))
+
+                            elif isinstance(initializer, javalang.tree.ArrayInitializer):
+                                array_list = []
+                                for initializer2 in initializer.initializers:
+                                    if isinstance(initializer2, javalang.tree.Literal):
+                                        array_list.append(initializer2.value)
+                                local_vars[var_name] = array_list
+
+                            # elif isinstance(initializer, javalang.tree.BinaryOperation):
+                            #     local_vars[var_name] = get_BinOp(initializer)
+                            else:
+                                # Jika initializer adalah literal
+                                local_vars[var_name] = getattr(initializer, 'value', 'None')
                     if isinstance(statement, javalang.tree.LocalVariableDeclaration):
                         for declarator in statement.declarators:
                             var_name = declarator.name
@@ -385,6 +463,58 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             "qualifier": qualifier
                         })
                         called_set.add((method_name, len(method_args), qualifier))
+                    elif isinstance(expression, javalang.tree.Assignment):
+                        declarator = expression
+
+                        if isinstance(declarator.expressionl, javalang.tree.MemberReference):
+                            var_name = declarator.expressionl.member
+
+                        initializer = declarator.value
+
+                        if isinstance(initializer, javalang.tree.This):
+                            initializer = initializer.selectors[0]
+
+                        # Jika initializer adalah pemanggilan metode
+                        if isinstance(initializer, javalang.tree.MethodInvocation):
+                            method_name = initializer.member
+                            qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
+                            # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
+                            method_args = []
+                            for arg in initializer.arguments:
+                                if isinstance(arg, javalang.tree.This):
+                                    arg = arg.selectors[0]
+                                if isinstance(arg, javalang.tree.ClassReference):
+                                    method_args.append(arg.type.name+".class")
+                                elif isinstance(arg, javalang.tree.MemberReference):
+                                    method_args.append(arg.member)
+                                elif isinstance(arg, javalang.tree.Literal):
+                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                            local_vars[var_name] = {
+                                "method": method_name,
+                                "arguments": method_args
+                            }
+
+                            called_methods.append({
+                                "method": method_name,
+                                "arguments": method_args,
+                                "qualifier": qualifier,
+                                "assigned_to": var_name
+                            })
+                            called_set.add((method_name, len(method_args), qualifier))
+
+                        elif isinstance(initializer, javalang.tree.ArrayInitializer):
+                            array_list = []
+                            for initializer2 in initializer.initializers:
+                                if isinstance(initializer2, javalang.tree.Literal):
+                                    array_list.append(initializer2.value)
+                            local_vars[var_name] = array_list
+
+                        # elif isinstance(initializer, javalang.tree.BinaryOperation):
+                        #     local_vars[var_name] = get_BinOp(initializer)
+                        else:
+                            # Jika initializer adalah literal
+                            local_vars[var_name] = getattr(initializer, 'value', 'None')
+
 
         elif isinstance(statement.then_statement, javalang.tree.StatementExpression):
 
@@ -588,7 +718,7 @@ def get_BinOp(expression):
             return str(expression.value)
         return "UNKNOWN"
 
-# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//robot-shop", _parse_tree_content, "java")
+# tree_contents = _extract_from_dir("./java/test", _parse_tree_content, "java")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))

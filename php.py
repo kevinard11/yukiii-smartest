@@ -251,7 +251,7 @@ def get_member_calls(node, calls=None):
         return {
             'method': calls[-1],
             'arguments': arguments,
-            'qualifier': calls[:-1]
+            'qualifier': '.'.join(calls[:-1])
         }
 
     return None
@@ -356,6 +356,12 @@ def get_if_while_for_function(child, called_methods, global_vars, local_vars, no
                     loc = get_local_variables(child7)
                     called_methods.extend(get_called_methods(child7))
                     local_vars.update(loc)
+        elif child6.type == 'if_statement':
+            get_if_functions(child6, called_methods, global_vars, local_vars, not_get_return)
+        elif child6.type == 'while_statement':
+            get_while_functions(child6, called_methods, global_vars, local_vars, not_get_return)
+        elif child6.type == 'for_statement':
+            get_for_functions(child6, called_methods, global_vars, local_vars, not_get_return)
         elif child6.type == 'compound_statement':
             for child7 in child6.children:
                 # print(child7)
@@ -363,6 +369,12 @@ def get_if_while_for_function(child, called_methods, global_vars, local_vars, no
                     loc = get_local_variables(child7)
                     called_methods.extend(get_called_methods(child7))
                     local_vars.update(loc)
+                elif child7.type == 'if_statement':
+                    get_if_functions(child7, called_methods, global_vars, local_vars, not_get_return)
+                elif child7.type == 'while_statement':
+                    get_while_functions(child7, called_methods, global_vars, local_vars, not_get_return)
+                elif child7.type == 'for_statement':
+                    get_for_functions(child7, called_methods, global_vars, local_vars, not_get_return)
                 elif child7.type == 'return_statement':
                     # print(child4.children)
                     if not_get_return:
@@ -373,9 +385,13 @@ def get_if_while_for_function(child, called_methods, global_vars, local_vars, no
             for child7 in child6.children:
                 if child7.type == 'if_statement':
                     get_if_functions(child7, called_methods, global_vars, local_vars, not_get_return)
+                elif child7.type == 'while_statement':
+                    get_while_functions(child7, called_methods, global_vars, local_vars, not_get_return)
+                elif child7.type == 'for_statement':
+                    get_for_functions(child7, called_methods, global_vars, local_vars, not_get_return)
                 elif child7.type == 'compound_statement':
                     for child8 in child7.children:
-                        print(child8)
+                        # print(child8)
                         if child8.type == 'expression_statement':
                             loc = get_local_variables(child8)
                             called_methods.extend(get_called_methods(child8))

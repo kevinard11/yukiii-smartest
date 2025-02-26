@@ -271,9 +271,11 @@ def get_called_methods(node):
     called_methods = []
 
     for child in node.children:
+        # print(child.children)
 
         # Mendeteksi pemanggilan fungsi langsung di dalam fungsi
         if child.type == "expression_statement":
+
             expr = child.children[0] if len(child.children) > 0 else None
             if expr and expr.type == "call_expression":
                 function_name_node = expr.child_by_field_name("function")
@@ -508,12 +510,13 @@ def get_return_type(node, local_vars, global_vars):
 
     return return_types
 
-def get_lib_methods(node, scope, lib):
+def get_lib_methods(node, scope, lib, called_methods = []):
     """Mencari semua pemanggilan fungsi di objek app (app.get, app.post, dll.)"""
     routes = {}
     count = 1
 
     for child in node.children:
+
         if child.type == "expression_statement":
             expr = child.children[0] if len(child.children) > 0 else None
             if expr and expr.type == "call_expression":
@@ -528,7 +531,6 @@ def get_lib_methods(node, scope, lib):
                         method_name = property_node.text.decode()  # Contoh: "get", "post", "put"
                         arguments = expr.child_by_field_name("arguments")
 
-                        # print(arguments, len(arguments.children))
                         if arguments and len(arguments.children) >= 2:
                             route_path = arguments.children[0].text.decode().strip("\"'")
                             callback_function = arguments.children[1]  # Callback function (Arrow Function)
@@ -555,6 +557,7 @@ def get_lib_methods(node, scope, lib):
 
                                 if function_body:
                                     for statement in function_body.children:
+                                        # print(statement)
                                         if statement.type == "variable_declaration":
                                             for declarator in statement.children:
                                                 if declarator.type == "variable_declarator":
@@ -563,6 +566,38 @@ def get_lib_methods(node, scope, lib):
 
                                                     if var_name:
                                                         local_vars[var_name.text.decode()] = get_node_value_type(var_value)
+                                        elif statement.type == 'expression_statement':
+                                            # print(statement.children)
+                                            for child in statement.children:
+                                                if child.type == 'call_expression':
+                                                    function_name_node = child.child_by_field_name("function")
+                                                    # arguments_nodes = [arg.text.decode() for arg in child.children[1:]]
+                                                    arguments_nodes = []
+                                                    for child1 in child.children:
+                                                        if child1.type == 'arguments':
+                                                            for child2 in child1.children[1:-1]:
+                                                                arguments_nodes.append(child2.text.decode())
+
+
+                                                    qualifier = None
+                                                    if function_name_node:
+                                                        function_name = function_name_node.text.decode()
+                                                        if "." in function_name:
+                                                            parts = function_name.split(".")
+                                                            qualifier = ".".join(parts[:-1])
+                                                            function_name = parts[-1]
+
+                                                        called_methods.append({
+                                                            "method": function_name,
+                                                            "arguments": arguments_nodes,
+                                                            "qualifier": qualifier
+                                                        })
+                                        elif statement.type == 'if_statement':
+                                            get_if_functions(statement, called_methods, local_vars)
+                                        elif statement.type == 'while_statement':
+                                            get_while_functions(statement, called_methods, local_vars)
+                                        elif statement.type == 'for_statement':
+                                            get_for_functions(statement, called_methods, local_vars)
 
                                 # Simpan hasil dalam routes
                                 function_key = f"{scope}.{lib}.{method_name}"
@@ -572,14 +607,61 @@ def get_lib_methods(node, scope, lib):
                                 if function_key in routes:
                                     function_key = f"{function_key}.{count}"
                                     count = count + 1
+
                                 routes[function_key] = {
-                                    "local_vars": local_vars
+                                    "local_vars": local_vars,
+                                    "called_methods": called_methods
                                 }
 
         # Rekursif untuk mencari lebih dalam
-        routes.update(get_lib_methods(child, scope, lib))
+        routes.update(get_lib_methods(child, scope, lib, called_methods))
 
     return routes
+
+def get_if_while_for_function(child, called_methods, local_vars):
+    for child6 in child.children:
+        if child6.type == 'parenthesized_expression':
+            for child7 in child6.children:
+                if child7.type == 'expression_statement':
+                    loc = get_local_variables(child7)
+                    called_methods.extend(get_called_methods(child7))
+                    local_vars.update(loc)
+        elif child6.type == 'compound_statement':
+            for child7 in child6.children:
+                if child7.type == 'expression_statement':
+                    loc = get_local_variables(child7)
+                    called_methods.extend(get_called_methods(child7))
+                    local_vars.update(loc)
+        elif child6.type == 'statement_block':
+             for child7 in child6.children:
+                if child7.type == 'expression_statement':
+                    loc = get_local_variables(child7)
+                    called_methods.extend(get_called_methods(child7))
+                    local_vars.update(loc)
+        elif child6.type == 'else_clause':
+            # print(child6.children)
+            for child7 in child6.children:
+                if child7.type == 'if_statement':
+                    get_if_functions(child7, called_methods, local_vars)
+                elif child7.type == 'compound_statement':
+                    for child8 in child7.children:
+                        # print(child8)
+                        if child8.type == 'expression_statement':
+                            loc = get_local_variables(child8)
+                            called_methods.extend(get_called_methods(child8))
+                            local_vars.update(loc)
+
+def get_if_functions(child, called_methods, local_vars):
+    if child.type == 'if_statement':
+        get_if_while_for_function(child, called_methods, local_vars)
+
+def get_while_functions(child, called_methods, local_vars):
+    if child.type == 'while_statement':
+        get_if_while_for_function(child, called_methods, local_vars)
+
+def get_for_functions(child, called_methods, local_vars):
+    if child.type == 'for_statement':
+        get_if_while_for_function(child, called_methods, local_vars)
 
 def get_argument_details(arg_node):
     """Menganalisis argumen yang diberikan ke app.use()"""
@@ -610,7 +692,7 @@ def get_argument_details(arg_node):
 
 JS_LANGUAGE = Language('build/my-languages.so', 'javascript')
 
-# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//robot-shop", _parse_tree_content, "js")
+# tree_contents = _extract_from_dir("./js/test", _parse_tree_content, "js")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
