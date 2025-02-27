@@ -3,6 +3,7 @@
 ## Version
 
 - 0.0.1 : parse java file, parse py file, cohesion metrix
+- 0.0.2 -> parse all file, cohesion metrix (LCOM5), main program
 
 ## Setup
 
