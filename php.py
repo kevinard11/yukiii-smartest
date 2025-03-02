@@ -82,8 +82,8 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
         global_var = get_global_variables(tree.root_node, key)
         global_vars.update(global_var)
 
-        called_method = get_global_called_methods(tree.root_node, key)
-        global_vars[f"{key}.called_methods"] = (called_method)
+        # called_method = get_global_called_methods(tree.root_node, key)
+        # global_vars[f"{key}.called_methods"] = (called_method)
 
     for key, tree in tree_contents.items():
         function = get_functions(tree.root_node, global_vars, key)
@@ -270,6 +270,7 @@ def get_class_functions(node, global_vars, scope):
                     full_function_name = f'{scope}.{child1.text.decode()}'
                 elif child1.type == "declaration_list":
                     for child2 in child1.children:
+                        # print(child2)
                         if child2.type == 'method_declaration':
                             local_vars = {}
                             called_methods = []
@@ -297,6 +298,7 @@ def get_class_functions(node, global_vars, scope):
                                             # print(full_function_name, local_vars)
                                         elif child4.type == 'compound_statement':
                                             for child5 in child4.children:
+                                                # print(child5)
                                                 if child5.type == 'expression_statement':
                                                     loc = get_local_variables(child5)
                                                     called_methods.extend(get_called_methods(child5))
@@ -321,6 +323,20 @@ def get_class_functions(node, global_vars, scope):
                                                                     if not_get_return:
                                                                         return_type = get_return_type(child6, local_vars, global_vars, 'class')
                                                                         local_vars["Return"] = return_type
+                                                        elif child6.type == 'catch_clause':
+                                                            for child7 in child6.children:
+                                                                if child7.type == 'compound_statement':
+                                                                    for child8 in child7.children:
+                                                                        # print(child8)
+                                                                        if child8.type == 'expression_statement':
+                                                                            loc = get_local_variables(child8)
+                                                                            called_methods.extend(get_called_methods(child8))
+                                                                            local_vars.update(loc)
+                                                                        elif child8.type == 'return_statement':
+                                                                            # print(child4.children)
+                                                                            if not_get_return:
+                                                                                return_type = get_return_type(child6, local_vars, global_vars, 'class')
+                                                                                local_vars["Return"] = return_type
                                                 elif child5.type == 'if_statement':
                                                     get_if_functions(child5, called_methods, global_vars, local_vars, not_get_return)
                                                 elif child5.type == 'while_statement':
@@ -593,7 +609,7 @@ def get_return_type(node, local_vars, global_vars, type=''):
 
 PHP_LANGUAGE = Language('build/my-languages.so', 'php')
 
-# tree_contents = _extract_from_dir("./php/test", _parse_tree_content, "php")
+# tree_contents = _extract_from_dir("./php/rs", _parse_tree_content, "php")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func['global_vars'], indent=2))

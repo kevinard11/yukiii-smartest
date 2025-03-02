@@ -493,36 +493,21 @@ def calculate_lcom5(variable, function):
 
 ## ------------------------------------------------------------------- ##
 '''Run command'''
-# lang = 'java'
-# tree_contents = java._extract_from_dir("C://Users//ARD//Desktop//robot-shop", java._parse_tree_content, lang)
-# # print(tree_contents)
-# variable_func = java._parse_function_variable(tree_contents)
-# print(json.dumps(variable_func, indent=2))
-# print(json.dumps(variable_func['global_vars'], indent=2))
+lang_list = {
+    'java': {'lang': 'java', 'extract': java._extract_from_dir, 'parse' : java._parse_tree_content, 'func': java._parse_function_variable},
+    'py': {'lang': 'py', 'extract': py._extract_from_dir, 'parse' : py._parse_tree_content, 'func': py._parse_function_variable},
+    'js': {'lang': 'js', 'extract': js._extract_from_dir, 'parse' : js._parse_tree_content, 'func': js._parse_function_variable},
+    'php': {'lang': 'php', 'extract': php._extract_from_dir, 'parse' : php._parse_tree_content, 'func': php._parse_function_variable},
+    'go': {'lang': 'go', 'extract': go._extract_from_dir, 'parse' : go._parse_tree_content, 'func': go._parse_function_variable}
+}
 
-# tree_contents = py._extract_from_dir("C://Users//ARD//Desktop//robot-shop", py._parse_tree_content, "py")
+lang = 'java'
+# tree_contents = lang_list[lang]['extract']("C://Users//ARD//Desktop//robot-shop", lang_list[lang]['parse'], lang)
 # print(tree_contents)
-# variable_func = py._parse_function_variable(tree_contents)
+# variable_func = lang_list[lang]['func'](tree_contents)
 # print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
-
-# tree_contents = js._extract_from_dir("C://Users//ARD//Desktop//robot-shop", js._parse_tree_content, "js")
-# print(tree_contents)
-# variable_func = js._parse_function_variable(tree_contents)
-# print(json.dumps(variable_func, indent=2))
-# print(json.dumps(variable_func['global_vars'], indent=2))
-
-# tree_contents = php._extract_from_dir("C://Users//ARD//Desktop//robot-shop", php._parse_tree_content, "php")
-# print(tree_contents)
-# variable_func = php._parse_function_variable(tree_contents)
-# print(json.dumps(variable_func, indent=2))
-# print(json.dumps(variable_func['global_vars'], indent=2))
-
-# tree_contents = go._extract_from_dir("C://Users//ARD//Desktop//robot-shop", go._parse_tree_content, "go")
-# print(tree_contents)
-# variable_func = go._parse_function_variable(tree_contents)
-# print(json.dumps(variable_func, indent=2))
-# print(json.dumps(variable_func['global_vars'], indent=2))
+# print(json.dumps(variable_func['functions'], indent=2))
 
 # all_params = get_all_params(variable_func["functions"])
 # print(all_params)

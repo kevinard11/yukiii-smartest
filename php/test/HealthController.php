@@ -19,52 +19,43 @@ class HealthController implements LoggerAwareInterface
 {
     // use LoggerAwareTrait;
 
-    /**
-     * @var HealthCheckService
-     */
-    // public $healthCheckService = $this->ea->construct('ada');
-    // public $healthCheckServices = $this->ea->construct('ada');
+    // /**
+    //  * @var string
+    //  */
+    // private $dsn;
 
-    // public function __construct(HealthCheckService $healthCheckService)
+    // /**
+    //  * @var string
+    //  */
+    // private $user;
+
+    // /**
+    //  * @var string
+    //  */
+    // private $password;
+
+    // public function __construct(string $dsn, string $user, string $password)
     // {
-    //     $this->healthCheckService = $healthCheckService;
-    //     $this->healthCheckService->checkConnectivity();
-    //     $this->healthCheckService->checkConnectivityssss();
-
-    //     return $this->bar('asdad', b);
+    //     $this->dsn = $dsn;
+    //     $this->user = $user;
+    //     $this->password = $password;
     // }
 
-    public function __invoke(Request $request): int
+    public function getConnection(): PDO
     {
-        // $checks = [];
-        // try {
-        //     $this->healthCheckService->checkConnectivity();
-        //     $checks['pdo_connectivity'] = true;
-        //     $basda = 'asdasdasd';
-        // } catch (\PDOException $e) {
-        //     $checks['pdo_connectivity'] = false;
-        // }
+        $opt = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ];
 
-        // $this->logger->info('Health-Check', $checks);
+        try {
+            return new PDO($this->dsn, $this->user, $this->password, $opt);
+        } catch (PDOException $e) {
+            $msg = $e->getMessage();
+            $this->logger->error("Database error $msg");
 
-        // if ($x > 10) {
-        //     $this->healthCheckService->checkConnectivity();
-        // } else if ($x < 10) {
-        //     $checks['pdo_connectivity'] = true;
-        // } else {
-        //     $basda = 'asdasdasd';
-        // }
-
-        // while ($y < 5) {
-        //     $basda = 'asdasdasd';
-        //     $this->healthCheckService->checkConnectivity();
-        // }
-
-        for ($i = 0; $i < 10; $i++) {
-            $basda = 'asdasdasd';
-            $this->healthCheckService->checkConnectivity();
+            return null;
         }
-
-        return new JsonResponse($checks, $checks['pdo_connectivity'] ? Response::HTTP_OK : Response::HTTP_BAD_REQUEST);
     }
 }

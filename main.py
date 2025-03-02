@@ -81,10 +81,10 @@ class Microservices():
         self.microservices.append(microservice)
 
     def calculate_alcom(self):
-        self.alcom = sum([ms.cohesion['LCOM'] for ms in self.microservices]) / len(self.microservices)
+        self.alcom = sum([ms.cohesion['LCOM'] for ms in self.microservices if ms.cohesion['LCOM'] > 0]) / len([ms for ms in self.microservices if ms.cohesion['LCOM'] > 0])
 
     def calculate_alcom4(self):
-        self.alcom4 = sum([ms.cohesion['LCOM4'] for ms in self.microservices]) / len(self.microservices)
+        self.alcom4 = sum([ms.cohesion['LCOM4'] for ms in self.microservices if ms.cohesion['LCOM4'] > 0]) / len([ms for ms in self.microservices if ms.cohesion['LCOM4'] > 0])
 
     def print(self):
         print(f"Service Name: {self.name}")
@@ -103,12 +103,21 @@ class Microservices():
             microservice.print()
 
 def main():
-    mss = Microservices('robot-shop', "C://Users//ARD//Desktop//robot-shop")
-    mss.create_microservice('payment', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services"])
-    mss.create_microservice('dispatch','py')
-    mss.create_microservice('cart', 'java')
-    mss.create_microservice('shipment', 'php', ["C://Users//ARD//Desktop//robot-shop"])
-    mss.create_microservice('user', 'js', ["C://Users//ARD//Desktop//robot-shop"])
+    mss = Microservices('robot-shop', "C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services")
+    mss.create_microservice('attractions', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//attractions"])
+    mss.create_microservice('frontend', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//frontend"])
+    mss.create_microservice('geo', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//geo"])
+    mss.create_microservice('profile', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//profile"])
+    mss.create_microservice('rate', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//rate"])
+    mss.create_microservice('recommendation', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//recommendation"])
+    mss.create_microservice('reservation', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//reservation"])
+    mss.create_microservice('review', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//review"])
+    mss.create_microservice('search', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//search"])
+    mss.create_microservice('user', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//user"])
+    # mss.create_microservice('dispatch','py', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services"])
+    # mss.create_microservice('cart', 'java', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services"])
+    # mss.create_microservice('shipment', 'php', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services"])
+    # mss.create_microservice('user', 'js', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services"])
     mss.print_microservice()
     mss.calculate_alcom()
     mss.calculate_alcom4()

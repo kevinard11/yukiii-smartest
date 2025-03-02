@@ -1,0 +1,145 @@
+springdoc:
+  version: '3.0'
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  pattern:
+    console: '%d{dd-MM-yyyy HH:mm:ss.SSS} [%-5level] [%-25thread] [%-36X{correlationId}] [%C{0}@%L]: %msg%n'
+
+spring:
+  main:
+    banner-mode: off
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driverClassName: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: ${SPRING_DATASOURCE_MAX_POOL_SIZE}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST}
+    port: ${SPRING_RABBITMQ_PORT}
+    username: ${SPRING_RABBITMQ_USERNAME}
+    password: ${SPRING_RABBITMQ_PASSWORD}
+  confins-rabbitmq:
+    host: ${SPRING_CONFINSRABBITMQ_HOST}
+    port: ${SPRING_CONFINSRABBITMQ_PORT}
+    username: ${SPRING_CONFINSRABBITMQ_USERNAME}
+    password: ${SPRING_CONFINSRABBITMQ_PASSWORD}
+  confins-rabbitmq-2:
+    host: ${SPRING_CONFINSRABBITMQ_2_HOST}
+    port: ${SPRING_CONFINSRABBITMQ_2_PORT}
+    username: ${SPRING_CONFINSRABBITMQ_2_USERNAME}
+    password: ${SPRING_CONFINSRABBITMQ_2_PASSWORD}
+  ndf4w-rabbitmq:
+    host: ${SPRING_NDFRABBITMQ_HOST}
+    port: ${SPRING_NDFRABBITMQ_PORT}
+    username: ${SPRING_NDFRABBITMQ_USERNAME}
+    password: ${SPRING_NDFRABBITMQ_PASSWORD}
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  redis:
+    host: ${SPRING_REDIS_HOST}
+    port: ${SPRING_REDIS_PORT}
+  flyway:
+    lock-retry-count: 10
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 20
+
+setting:
+  queue:
+    confins-agent-registration:
+      queue:  core.pump-data-regist-sms-confins
+      exchange: core
+      routingkey: pump-data-regist-sms-confins
+    confins-agent-syncup:
+      queue:  core.integrasi-data-marketing-ais-ke-bravo
+      exchange: core
+      routingkey: integrasi-data-marketing-ais-ke-bravo
+    confins-registration-status:
+      queue:  los-save-mkt-emp-rtn
+      exchange: confins
+      routingkey: los-save-mkt-emp-rtn
+    ndf4w-registration-status:
+      queue:  ndf4w.agent-registration
+      exchange:  
+      routingkey:
+    are-update:
+      exchange: agent-update
+    cronexpression: ${QUEUE_RETRY_CRON}  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driverClassName: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  service:
+    internal:
+      name: 'Service Agent'
+      key: ${INTERNAL_SERVICE_KEY}
+  application:
+    name: 'ms-agent'
+  cache:
+    default:
+      ttl-seconds: 3600
+    confins-token:
+      ttl-seconds: 43200
+    confins-agent:
+      ttl-seconds: 10
+  jwt:
+    jks:
+      filePath: ${JWT_JKS_FILE_PATH}
+      filePassword: ${JWT_JKS_FILE_PASSWORD}
+      keyName: ${JWT_JKS_KEY_NAME}
+      keyPassword: ${JWT_JKS_KEY_PASSWORD}
+      
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+  servlet:
+    context-path: ${SERVICE_CONTEXT_PATH:/}
+    
+management:
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include:
+          - prometheus
+          - metrics
+          - health
+  metrics:
+    tags:
+      application: 'ms-agent'
+
+microservice:
+  master:
+    url: ${MICROSERVICE_MASTER_URL}
+  confinsoauth:
+    url: ${MICROSERVICE_CONFINSOAUTH_URL}
+    key: ${MICROSERVICE_CONFINSOAUTH_KEY}
+    secret: ${MICROSERVICE_CONFINSOAUTH_SECRET}
+  confins:
+    url: ${MICROSERVICE_CONFINS_URL}
+    hmacsecret: ${MICROSERVICE_CONFINS_HMACSECRET}
+  warriors:
+    url: ${MICROSERVICE_WARRIORS_URL}
+
+notification:
+  slack:
+    reconSyncFailWebhookUrl: https://hooks.slack.com/services/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

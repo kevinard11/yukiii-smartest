@@ -1,0 +1,90 @@
+spring:
+  application:
+    name: 'local-ms-agent'
+  datasource:
+    url: jdbc:postgresql://localhost/bravo-agent-service
+    driverClassName: org.postgresql.Driver
+    username: bravo-agent-service
+    password: bravo-agent-service
+    hikari:
+      maximum-pool-size: 5
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+  confins-rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+  confins-rabbitmq-2:
+    host: 127.0.0.1
+    port: 5673
+    username: guest
+    password: guest
+  ndf4w-rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+  redis:
+    host: 127.0.0.1
+    port: 6379
+  flyway:
+    lock-retry-count: 10
+
+logging:
+  level:
+    org:
+      apache:
+        http: DEBUG
+      hibernate:
+        SQL: debug
+        type:
+          descriptor:
+            sql: trace
+      springframework:
+        security: DEBUG
+        web:
+          client:
+            RestTemplate: DEBUG
+        amqp: ERROR
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+setting:
+  service:
+    internal:
+      name: 'Service bravo-agent-service'
+      key: INTERNAL_KEY
+  queue:
+    name: agent_queue
+    cronexpression: "0 27 13 * * ?"
+  exchange:
+    name: agent_exchange
+  routingKey: agent_routing_key
+  jwt:
+    token:
+      issuer: MY_LOCAL_MACHINE
+    jks:
+      filePath: './jwt.jks'
+      filePassword: 'P@ssw0rd'
+      keyName: 'jwt_key'
+      keyPassword: 'P@ssw0rd'
+
+microservice:
+  master:
+    url: https://microservices.dev.bravo.bfi.co.id/master
+  confinsoauth:
+    url: https://gateway-gc.bfi.co.id/oauth
+    key: do5KkKlgGehuQyETaVmqcMqCHmALLbNy
+    secret: Qwlq5ngRmOhco3TJ
+  confins:
+    url: https://gateway-gc.bfi.co.id
+    hmacsecret: hmacSecretKeyBravoTest
+  warriors:
+    url: https://gateway-gc.bfi.co.id/bfibravo/cloud/agency_api/api
