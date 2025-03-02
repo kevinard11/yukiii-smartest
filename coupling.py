@@ -164,26 +164,29 @@ def get_called_service(global_vars, functions, service_base_url, service_queue):
     return called_services
 
 def find_in_local_global_vars(global_vars, local_vars, key, nearest_key):
-    if key in local_vars and local_vars[key]: # find in local variable
-        if isinstance(local_vars[key], str):
-            local_key = local_vars[key].replace('"', '').replace('${', '').replace('}', '')
-            if (local_key in local_vars and local_vars[local_key]) or find_in_global_vars(global_vars, local_key):
-                return find_in_local_global_vars(global_vars, local_vars, local_key, nearest_key)
-            else:
-                return local_key
-    else: # find in global variable
-        if find_in_global_vars(global_vars, f"{nearest_key}.{key}"):
-            use_key = f"{nearest_key}.{key}"
-        else :
-            use_key = key
+    try:
+        if key in local_vars and local_vars[key]: # find in local variable
+            if isinstance(local_vars[key], str):
+                local_key = local_vars[key].replace('"', '').replace('${', '').replace('}', '')
+                if (local_key in local_vars and local_vars[local_key]) or find_in_global_vars(global_vars, local_key):
+                    return find_in_local_global_vars(global_vars, local_vars, local_key, nearest_key)
+                else:
+                    return local_key
+        else: # find in global variable
+            if find_in_global_vars(global_vars, f"{nearest_key}.{key}"):
+                use_key = f"{nearest_key}.{key}"
+            else :
+                use_key = key
 
-        local_key = find_in_global_vars(global_vars, use_key)
-        if isinstance(local_key, str):
-            local_key = local_key.replace('"', '').replace('${', '').replace('}', '') if local_key else None
-            if find_in_global_vars(global_vars, local_key):
-                return find_in_local_global_vars(global_vars, local_vars, local_key, nearest_key)
-            else:
-                return local_key
+            local_key = find_in_global_vars(global_vars, use_key)
+            if isinstance(local_key, str):
+                local_key = local_key.replace('"', '').replace('${', '').replace('}', '') if local_key else None
+                if find_in_global_vars(global_vars, local_key):
+                    return find_in_local_global_vars(global_vars, local_vars, local_key, nearest_key)
+                else:
+                    return local_key
+    except Exception:
+        return None
 
 def find_in_global_vars(global_vars, key_var):
     for key, value in global_vars.items():
@@ -217,29 +220,27 @@ lang_list = {
     'go': {'lang': 'go', 'extract': go._extract_from_dir, 'parse' : go._parse_tree_content, 'func': go._parse_function_variable}
 }
 
-lang = 'go'
-dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services';
+lang = 'java'
+# dir_path = "D://DATA//java//intellij//bravo-agent-service//src//main"
+# dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
 # dir_path = "C://Users//ARD//Desktop//robot-shop"
-# dir_path = "./java/test"
+dir_path = "./java/test"
 tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
 variable_func = lang_list[lang]['func'](tree_contents)
-print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
 # print(json.dumps(variable_func['functions'], indent=2))
 
 service_base_url = {
-    'order': 'http://ldalda/order',
-    'payment': 'http://ldalda/payment',
+    'warriors': 'https://gateway-gc.bfi.co.id/bfibravo/cloud/agency_api/api',
     'confins': 'https://gateway-gc.bfi.co.id',
     'master': 'https://microservices.dev.bravo.bfi.co.id/master',
 }
 
 service_queue = {
-    'master': ['rabbitMqQueue', 'ssssss'],
-    'payment': ['rabbitMqQueuePayment'],
-    'confins': ['https://gateway-gc.bfi.co.id'],
-    'order': ['rabbitMqQueueOrder', 'rabbitMqQueuePayment'],
+    'master': ['agent_queue', 'ssssss'],
+    'agent': ['agent_queue'],
 }
 
 api_call_framework = {
@@ -257,6 +258,6 @@ MQ_framework = {
 # print(feign_global_vars)
 # rabbitMQ_function = get_all_rabbitMQ_client_function(variable_func['functions'])
 # print(rabbitMQ_function)
-# called_services = get_called_service(variable_func['global_vars'], variable_func['functions'], service_base_url, service_queue)
-# print(called_services)
+called_services = get_called_service(variable_func['global_vars'], variable_func['functions'], service_base_url, service_queue)
+print(called_services)
 
