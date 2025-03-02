@@ -13,7 +13,7 @@ def _extract_from_dir(dir_path, parser, lang) -> dict:
                 file_path = os.path.join(dirpath, filename)
                 file_content = parser(file_path)
                 # package = _parse_tree_package(file_content)
-                package = dirpath.replace('./','').replace('/','.').replace('\\', '.')
+                package = dirpath.replace('./','').replace('/','.').replace('\\', '.').replace('..','.').replace(':','')
 
                 if package:
                     key = package + "." + filename.replace(f".{lang}", "")

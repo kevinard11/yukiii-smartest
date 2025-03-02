@@ -24,6 +24,8 @@ class Gost {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowirde
+    private final KafkaTemplate<String, String> kafkaTemplate;
     // public int getWhy() {
     //     return this.why;
     // }
@@ -36,10 +38,15 @@ class Gost {
     //     return this.knapa;
     // }
 
-    // public void setKnapa(String knapa) {
-    //     this.knapa = knapa;
+    public void setKnapa(String knapa) {
+        sendMessagees("ssssss", "sss");
 
-    // }
+    }
+
+    public void sendMessagees(String topic, String message) {
+        kafkaTemplate.send(topic, message);
+        System.out.println("Message sent: " + message);
+    }
 
     // public void foo() {
     //     String[] arg1 = {"a", "b"};
@@ -57,23 +64,25 @@ class Gost {
     // }
 
     public void baz() {
-        sendMessage("asd", "asd");
+        sendMessage(queue, "asd");
+        sendMessage("rabbitMqQueuePayment", "sss");
     }
 
     String url = "http://ldalda/order";
+    String queue = "rabbitMqQueue";
 
     public void sendMessage(String queue, String message) {
         rabbitTemplate.convertAndSend(queue, message);
         System.out.println("Message sent: " + message);
     }
 
-    // private void printGo(String test, String dooododoasdas) {
-    //     masterClient.getSubDistrictList(test);
-    //     masterClient.getSubDistrictListByZipCode(dooododoasdas);
-    //    confinsClient.generateAgreementNumber(dooododoasdas, null);
-    //    RestTemplate restTemplate = new RestTemplate();
-    //    String response = restTemplate.getForObject(testUrl, String.class);
-    // }
+    private void printGo(String test, String dooododoasdas) {
+        masterClient.getSubDistrictList(test);
+        masterClient.getSubDistrictListByZipCode(dooododoasdas);
+       confinsClient.generateAgreementNumber(dooododoasdas, null);
+       RestTemplate restTemplate = new RestTemplate();
+       String response = restTemplate.getForObject(testUrl, String.class);
+    }
 
     // public void main(String[] args) {
     //     HttpClient httpClient = HttpClient.newHttpClient();
@@ -86,13 +95,13 @@ class Gost {
     //     HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     // }
 
-    // public String findasd(int d, String[] dsda) {
-    //     HttpResponse<String> response = Unirest.post(testUrl)
-    //     .field("username", "john_doe")
-    //     .field("file", new File("path/to/file.txt"))
-    //     .asString();
-    //     return response.body();
-    // }
+    public String findasd(int d, String[] dsda) {
+        HttpResponse<String> response = Unirest.post(testUrl)
+        .field("username", "john_doe")
+        .field("file", new File("path/to/file.txt"))
+        .asString();
+        return response.body();
+    }
 
     // public int findasde(int b) {
     //     return b;

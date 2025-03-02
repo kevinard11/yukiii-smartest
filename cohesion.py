@@ -502,9 +502,9 @@ lang_list = {
 }
 
 lang = 'java'
-# tree_contents = lang_list[lang]['extract']("C://Users//ARD//Desktop//robot-shop", lang_list[lang]['parse'], lang)
+tree_contents = lang_list[lang]['extract']("./java/rs", lang_list[lang]['parse'], lang)
 # print(tree_contents)
-# variable_func = lang_list[lang]['func'](tree_contents)
+variable_func = lang_list[lang]['func'](tree_contents)
 # print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
 # print(json.dumps(variable_func['functions'], indent=2))

@@ -11,14 +11,14 @@ def _extract_from_dir(dir_path, parser, lang) -> dict:
             if filename.endswith(f".{lang}"):
                 file_path = os.path.join(dirpath, filename)
                 file_content = parser(file_path)
-                package = _parse_tree_package(file_content)
+                if file_content:
+                    package = _parse_tree_package(file_content)
+                    if package:
+                        key = package + "." + filename.replace(f".{lang}", "")
+                    else:
+                        key = file_path
 
-                if package:
-                    key = package + "." + filename.replace(f".{lang}", "")
-                else:
-                    key = file_path
-
-                contents[key] = file_content
+                    contents[key] = file_content
             elif 'application' in filename and filename.endswith(".yaml"):
                 file_path = os.path.join(dirpath, filename)
                 file_content = _parse_content_yaml(file_path)
@@ -34,9 +34,13 @@ def _parse_content(file_path) -> any:
     return file_contents
 
 def _parse_tree_content(file_path) -> any:
-    file_contents = _parse_content(file_path)
+    try:
+        file_contents = _parse_content(file_path)
 
-    return javalang.parse.parse(file_contents)
+        return javalang.parse.parse(file_contents)
+    except Exception:
+        return None
+
 
 def _parse_tree_package(tree_contents) -> str:
     return tree_contents.package.name
@@ -137,6 +141,15 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                             if isinstance(initializer2, javalang.tree.Literal):
                                 array_list.append(initializer2.value)
                         method_args.append(array_list)
+                    elif isinstance(declarator.initializer, javalang.tree.LambdaExpression):
+                        global_vars[var_name] = "lambda_expression"
+                    elif isinstance(declarator.initializer, javalang.tree.ClassCreator):
+                        global_vars[var_name] = f"{declarator.initializer.type.name}.class" if declarator.initializer else None
+                    elif isinstance(declarator.initializer, javalang.tree.MemberReference):
+                        global_vars[var_name] = f"{declarator.initializer.member}" if declarator.initializer else None
+                        # print(declarator.initializer)
+                    elif isinstance(declarator.initializer, javalang.tree.BinaryOperation):
+                       global_vars[var_name] = get_BinOp(declarator.initializer)
                     else:
                         global_vars[var_name] = declarator.initializer.value if declarator.initializer else None
 
@@ -190,13 +203,15 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                 method_args = []
                                 for arg in expression.arguments:
                                     if isinstance(arg, javalang.tree.This):
-                                        arg = arg.selectors[0]
+                                        arg = arg.selectors[0] if arg.selectors else arg
                                     if isinstance(arg, javalang.tree.ClassReference):
                                         method_args.append(arg.type.name+".class")
                                     elif isinstance(arg, javalang.tree.MemberReference):
                                         method_args.append(arg.member)
                                     elif isinstance(arg, javalang.tree.Literal):
                                         method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                    elif isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(f"{arg.type.name}.class")
 
                                 called_methods.append({
                                     "method": method_name,
@@ -230,17 +245,21 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                             method_args.append(arg.member)
                                         elif isinstance(arg, javalang.tree.Literal):
                                             method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                        elif isinstance(arg, javalang.tree.ClassReference):
+                                            method_args.append(f"{arg.type.name}.class")
+                                        else:
+                                            method_args.append(str(arg))
                                     local_vars[var_name] = {
                                         "method": method_name,
                                         "arguments": method_args
                                     }
 
-                                    # called_methods.append({
-                                    #     "method": method_name,
-                                    #     "arguments": method_args,
-                                    #     "qualifier": qualifier,
-                                    #     "assigned_to": var_name
-                                    # })
+                                    called_methods.append({
+                                        "method": method_name,
+                                        "arguments": method_args,
+                                        "qualifier": qualifier,
+                                        "assigned_to": var_name
+                                    })
                                     called_set.add((method_name, len(method_args), qualifier))
 
                                 elif isinstance(initializer, javalang.tree.ArrayInitializer):
@@ -278,10 +297,16 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                         #     method_args(get_BinOp(arg))
                                         elif isinstance(arg, javalang.tree.Literal):
                                             method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                        elif isinstance(arg, javalang.tree.ClassReference):
+                                            method_args.append(f"{arg.type.name}.class")
+                                        else:
+                                            method_args.append(str(arg))
+
                                     local_vars[var_name] = {
                                         "method": method_name,
                                         "arguments": method_args
                                     }
+                                    # --------------------eaeaea
 
                                     called_methods.append({
                                         "method": method_name,
@@ -331,6 +356,10 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                                 #     method_args(get_BinOp(initializer))
                                                 elif isinstance(arg, javalang.tree.Literal):
                                                     method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                                elif isinstance(arg, javalang.tree.ClassReference):
+                                                    method_args.append(f"{arg.type.name}.class")
+                                                else:
+                                                    method_args.append(str(arg))
                                             local_vars[var_name] = {
                                                 "method": method_name,
                                                 "arguments": method_args
@@ -377,6 +406,10 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                     method_args.append(arg.member)
                                 elif isinstance(arg, javalang.tree.Literal):
                                     method_args.append(arg.value)
+                                elif isinstance(arg, javalang.tree.ClassReference):
+                                    method_args.append(f"{arg.type.name}.class")
+                                else:
+                                    method_args.append(str(arg))
                                 # elif isinstance(arg, javalang.tree.BinaryOperation):
                                 #     method_args(get_BinOp(initializer))
 
@@ -415,6 +448,10 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                     method_args.append(arg.member)
                 elif isinstance(arg, javalang.tree.Literal):
                     method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                elif isinstance(arg, javalang.tree.ClassReference):
+                    method_args.append(f"{arg.type.name}.class")
+                else:
+                    method_args.append(str(arg))
                 # elif isinstance(arg, javalang.tree.BinaryOperation):
                 #     method_args(get_BinOp(initializer))
 
@@ -451,6 +488,8 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                                     method_args.append(arg.member)
                                 elif isinstance(arg, javalang.tree.Literal):
                                     method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                else:
+                                    method_args.append(str(arg))
                                 # elif isinstance(arg, javalang.tree.BinaryOperation):
                                 #     method_args(get_BinOp(initializer))
                             local_vars[var_name] = {
@@ -499,6 +538,8 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                                 method_args.append(arg.member)
                             elif isinstance(arg, javalang.tree.Literal):
                                 method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                            else:
+                                method_args.append(str(arg))
 
                         called_methods.append({
                             "method": method_name,
@@ -532,31 +573,33 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                                     method_args.append(arg.member)
                                 elif isinstance(arg, javalang.tree.Literal):
                                     method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                            local_vars[var_name] = {
-                                "method": method_name,
-                                "arguments": method_args
-                            }
+                                else:
+                                    method_args.append(str(arg))
+                            # local_vars[var_name] = {
+                            #     "method": method_name,
+                            #     "arguments": method_args
+                            # }
 
                             called_methods.append({
                                 "method": method_name,
                                 "arguments": method_args,
                                 "qualifier": qualifier,
-                                "assigned_to": var_name
+                                # "assigned_to": var_name
                             })
                             called_set.add((method_name, len(method_args), qualifier))
 
-                        elif isinstance(initializer, javalang.tree.ArrayInitializer):
-                            array_list = []
-                            for initializer2 in initializer.initializers:
-                                if isinstance(initializer2, javalang.tree.Literal):
-                                    array_list.append(initializer2.value)
-                            local_vars[var_name] = array_list
+                        # elif isinstance(initializer, javalang.tree.ArrayInitializer):
+                        #     array_list = []
+                        #     for initializer2 in initializer.initializers:
+                        #         if isinstance(initializer2, javalang.tree.Literal):
+                        #             array_list.append(initializer2.value)
+                        #     local_vars[var_name] = array_list
 
                         # elif isinstance(initializer, javalang.tree.BinaryOperation):
                         #     local_vars[var_name] = get_BinOp(initializer)
-                        else:
-                            # Jika initializer adalah literal
-                            local_vars[var_name] = getattr(initializer, 'value', 'None')
+                        # else:
+                        #     # Jika initializer adalah literal
+                        #     local_vars[var_name] = getattr(initializer, 'value', 'None')
 
 
         elif isinstance(statement.then_statement, javalang.tree.StatementExpression):
@@ -587,6 +630,8 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             method_args.append(arg.member)
                         elif isinstance(arg, javalang.tree.Literal):
                             method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                        else:
+                            method_args.append(str(arg))
                     local_vars[var_name] = {
                         "method": method_name,
                         "arguments": method_args
@@ -640,6 +685,8 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                                     method_args.append(arg.member)
                                 elif isinstance(arg, javalang.tree.Literal):
                                     method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                else:
+                                    method_args.append(str(arg))
                             local_vars[var_name] = {
                                 "method": method_name,
                                 "arguments": method_args
@@ -688,6 +735,8 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                                 method_args.append(arg.member)
                             elif isinstance(arg, javalang.tree.Literal):
                                 method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                            else:
+                                method_args.append(str(arg))
 
                         called_methods.append({
                             "method": method_name,
@@ -722,6 +771,8 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                                     method_args.append(arg.member)
                                 elif isinstance(arg, javalang.tree.Literal):
                                     method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                else:
+                                    method_args.append(str(arg))
                             local_vars[var_name] = {
                                 "method": method_name,
                                 "arguments": method_args
@@ -765,5 +816,6 @@ def get_BinOp(expression):
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['functions'], indent=2))
 
 
