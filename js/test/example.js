@@ -1,59 +1,23 @@
 #!/home/utils/node-v14.5.0/bin/node
-// #!/usr/bin/env node
-// Same example for .ts typescript
 
-function foo() {
-    const arg1 = 'a'
-    // let b = see.bar(arg1)
-    // see.bar(globalList)
+fetch('https://api.example.com/data')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
 
-    return globalRunCount
-}
-function bar( myList ) {
-    globalRunCount = globalRunCount + 1
-    if ( globalRunCount < 2 ) {
-        bar(myList)
-    }
-    console.log("hello")
-    baz()
+const axios = require('axios'); // Jika di Node.js, tidak perlu jika di browser
 
-    return '8'
-}
-function baz() {
-    console.log("world %s", globalList)
-}
-// main program
-const globalRunCount = require('mongodb').MongoClient
-globalList = ['a', 'b']
-test = foo()
-foo("ada")
-baz()
+axios.get('https://api.example.com/data/eeeee')
+  .then(response => console.log(response.data))
+  .catch(error => console.error('Error:', error));
 
-app.get('/health', (req, res) => {
-    var stat = {
-        app: 'OK',
-        mongo: mongoConnected
-    };
-    res.json(stat);
-});
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(expLogger);
-app.use((req, res, next) => {
-    res.set('Timing-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Origin', '*');
-    next();
-});
-// all categories
-app.get('/categories', (req, res) => {
-    if(mongoConnected) {
-        collection.distinct('categories').then((categories) => {
-            res.json(categories);
-        }).catch((e) => {
-            req.log.error('ERROR', e);
-            res.status(500).send(e);
-        });
-    } else {
-        req.log.error('database not available');
-        res.status(500).send('database not available');
-    }
-});
+const got = require('got');
+
+(async () => {
+  try {
+    const response = await got('https://api.example.com/data/asdasdasdasd').json();
+    console.log(response);
+  } catch (error) {
+    console.error(error);
+  }
+})();

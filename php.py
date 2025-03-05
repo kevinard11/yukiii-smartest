@@ -181,13 +181,14 @@ def is_inside_function(node):
     return False
 
 def get_value(node):
+    # print(node.type)
     if node.type == "array" or node.type == 'array_creation_expression':
         # print(node.children)
         values = [v.text.decode() for v in node.children[2:-1]]
         return values
     elif node.type == "integer":
         return int(node.text)
-    elif node.type == "string":
+    elif node.type == "string" or node.type == "encapsed_string":
         return node.text.decode()
     elif node.type == "true" or node.type == "false":
         return node.type == "true"
@@ -239,6 +240,15 @@ def get_member_calls(node, calls=None):
         calls = []
 
     if node.type == 'member_call_expression':
+        for child in node.children:
+            if child.type == 'member_access_expression' or child.type == 'variable_name':
+                qualifier = child.text.decode().replace('->','.')
+                calls.append(qualifier)
+            elif child.type == 'name':
+                calls.append(child.text.decode())
+            elif child.type == 'arguments':
+                arguments = [arg.text.decode() for arg in child.children[1:-1] if arg.text.decode() != ',']
+    elif node.type == 'scoped_call_expression':
         for child in node.children:
             if child.type == 'member_access_expression' or child.type == 'variable_name':
                 qualifier = child.text.decode().replace('->','.')
@@ -505,11 +515,14 @@ def get_local_variables(node):
                     # Jika variabel adalah hasil pemanggilan fungsi
                     if var_value and var_value.type == "function_call_expression":
                         local_vars[full_var_name] = get_calls(var_value)
-                    elif var_value and var_value.type == "member_call_expression":
+                    elif var_value and (var_value.type == "member_call_expression" or var_value.type == 'scoped_call_expression'):
                         local_vars[full_var_name] = get_member_calls(var_value)
                     # Jika variabel bukan hasil pemanggilan fungsi, simpan nilainya langsung
-                    elif var_value and var_value.type == "variable_name":
-                        local_vars[full_var_name] = var_value.text.decode()
+                    elif var_value and (var_value.type == "variable_name" or var_value.type == 'member_access_expression'):
+                        qualifier = var_value.text.decode().replace('->','.')
+                        # print(var_value)
+                        # local_vars[full_var_name] = var_value.text.decode()
+                        local_vars[full_var_name] = qualifier
                     else:
                         local_vars[full_var_name] = get_value(var_value)
 
@@ -531,7 +544,7 @@ def get_called_methods(node):
         elif child.type == "function_call_expression":
             res = get_calls(child)
             local_called_methods.append(res)
-        elif child.type == "member_call_expression":
+        elif child.type == "member_call_expression" or child.type == 'scoped_call_expression':
             res = get_member_calls(child)
             local_called_methods.append(res)
 
@@ -609,7 +622,7 @@ def get_return_type(node, local_vars, global_vars, type=''):
 
 PHP_LANGUAGE = Language('build/my-languages.so', 'php')
 
-# tree_contents = _extract_from_dir("./php/rs", _parse_tree_content, "php")
+# tree_contents = _extract_from_dir("./php/test", _parse_tree_content, "php")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func['global_vars'], indent=2))

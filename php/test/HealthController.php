@@ -12,6 +12,12 @@
 // use Symfony\Component\HttpFoundation\Response;
 // use Symfony\Component\Routing\Annotation\Route;
 
+
+require 'vendor/autoload.php';
+use GuzzleHttp\Client;
+use Unirest\Request;
+use Symfony\Component\HttpClient\HttpClient;
+
 /**
  * @Route("/_health")
  */
@@ -43,19 +49,64 @@ class HealthController implements LoggerAwareInterface
 
     public function getConnection(): PDO
     {
-        $opt = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ];
+        // $opt = [
+        //     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        //     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        //     PDO::ATTR_EMULATE_PREPARES => false,
+        // ];
 
-        try {
-            return new PDO($this->dsn, $this->user, $this->password, $opt);
-        } catch (PDOException $e) {
-            $msg = $e->getMessage();
-            $this->logger->error("Database error $msg");
+        // try {
+        //     return new PDO($this->dsn, $this->user, $this->password, $opt);
+        // } catch (PDOException $e) {
+        //     $msg = $e->getMessage();
+        //     $this->logger->error("Database error $msg");
 
-            return null;
-        }
+        //     return null;
+        // }
+
+        $url = "https://gateway-gc.bfi.co.id/confins/asdadasda";
+        $response = file_get_contents($url);
+        $data = json_decode($response, true);
+
+        print_r($data);
+        $url = "https://microservices.dev.bravo.bfi.co.id/master";
+        $data = ["name" => "John", "email" => "john@example.com"];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $result = json_decode($response, true);
+        print_r($result);
+
+        $client = new Client();
+        $response = $client->request('GET', 'https://api.example.com/data');
+        $data = json_decode($response->getBody(), true);
+
+        print_r($data);
+
+        $response = Request::get('https://api.example.com/data');
+        $data = $response->body;
+
+        print_r($data);
+
+        $client = HttpClient::create();
+        $response = $client->request('GET', 'https://api.example.com/data');
+
+        $data = $response->toArray();
+        print_r($data);
+
+        $channel->queue_declare('master_queue', false, false, false, false);
+        $queue = $context->createQueue('master_queue');
+        $conf = new RdKafka\Conf();
+        $conf->set('master_queue', 'localhost:9092');
+
+        $producer = new RdKafka\Producer($conf);
+        $topic = $producer->newTopic("test-topic");
     }
 }

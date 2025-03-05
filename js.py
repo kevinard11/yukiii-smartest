@@ -42,6 +42,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
     global_vars = {}
     functions = {}
 
+
     for key, tree in tree_contents.items():
         global_var = get_global_variables(tree.root_node, key)
         global_vars.update(global_var)
@@ -215,16 +216,67 @@ def get_binary_expressions(node):
 
     return ""
 
-def get_global_called_methods(node, scope):
+def get_global_called_methods(node , scope):
     """Mencari semua pemanggilan fungsi yang hanya terjadi di global scope"""
     global_called_methods = []
 
     for child in node.children:
         if child.type == "expression_statement":
+            # print(child.children)
             expr = child.children[0]
             if expr.type == "call_expression" and not is_inside_function(child):
+                # print(expr.children[0].children[0].text.decode())
                 function_name_node = expr.child_by_field_name("function")
-                arguments_nodes = [arg.text.decode() for arg in expr.children[1:]]
+                arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+                # print(arguments_nodes)
+
+                if function_name_node:
+                    function_name = function_name_node.text.decode()
+                    qualifier = None
+
+                    if "." in function_name:
+                        parts = function_name.split(".")
+                        qualifier = ".".join(parts[:-1])
+                        function_name = parts[-1]
+
+                    global_called_methods.append({
+                        "method": function_name,
+                        "arguments": arguments_nodes,
+                        "qualifier": qualifier
+                    })
+
+        elif child.type == "call_expression":
+            # print('b', node, child, child.text.decode())
+            expr = child.children[0]
+
+            if expr.type == 'member_expression':
+                expr1 = expr.children[0]
+                if expr1.type == "call_expression" and not is_inside_function(child):
+                    # print(expr1.children[0].children[0].text.decode())
+                    function_name_node = expr1.child_by_field_name("function")
+                    arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr1.children[1:]]
+                    # print(arguments_nodes)
+
+                    if function_name_node:
+                        function_name = function_name_node.text.decode()
+                        qualifier = None
+
+                        if "." in function_name:
+                            parts = function_name.split(".")
+                            qualifier = ".".join(parts[:-1])
+                            function_name = parts[-1]
+
+                        global_called_methods.append({
+                            "method": function_name,
+                            "arguments": arguments_nodes,
+                            "qualifier": qualifier
+                        })
+
+            elif expr.type == "call_expression" and not is_inside_function(child):
+                # print(expr.children[0].children[0].text.decode())
+                function_name_node = expr.child_by_field_name("function")
+                arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+                # print(arguments_nodes)
 
                 if function_name_node:
                     function_name = function_name_node.text.decode()
@@ -244,6 +296,14 @@ def get_global_called_methods(node, scope):
         global_called_methods.extend(get_global_called_methods(child, scope))
 
     return global_called_methods
+
+def format_arguments(arg):
+    if arg.startswith("("):
+        arg = arg[1:]
+    if arg.endswith(")"):
+        arg = arg[0:-1]
+
+    return arg
 
 
 def is_inside_function(node):
@@ -279,7 +339,7 @@ def get_called_methods(node):
             expr = child.children[0] if len(child.children) > 0 else None
             if expr and expr.type == "call_expression":
                 function_name_node = expr.child_by_field_name("function")
-                arguments_nodes = [arg.text.decode() for arg in expr.children[1:]]
+                arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
                 qualifier = None
 
                 if function_name_node:
@@ -320,7 +380,7 @@ def get_local_variables(node):
                         # Jika variabel adalah hasil pemanggilan fungsi
                         if var_value and var_value.type == "call_expression":
                             function_name_node = var_value.child_by_field_name("function")
-                            arguments_nodes = [arg.text.decode() for arg in var_value.children[1:]]
+                            arguments_nodes = [format_arguments(arg.text.decode()) for arg in var_value.children[1:]]
 
                             qualifier = None
                             if function_name_node:
@@ -354,7 +414,7 @@ def get_local_variables(node):
                     # Jika variabel adalah hasil pemanggilan fungsi
                     if var_value and var_value.type == "call_expression":
                         function_name_node = var_value.child_by_field_name("function")
-                        arguments_nodes = [arg.text.decode() for arg in var_value.children[1:]]
+                        arguments_nodes = [format_arguments(arg.text.decode()) for arg in var_value.children[1:]]
 
                         qualifier = None
                         if function_name_node:
@@ -472,7 +532,7 @@ def get_return_type(node, local_vars, global_vars):
                 # Jika return adalah pemanggilan fungsi
                 elif return_value.type == "call_expression":
                     function_name_node = return_value.child_by_field_name("function")
-                    arguments_nodes = [arg.text.decode() for arg in return_value.children[1:]]
+                    arguments_nodes = [format_arguments(arg.text.decode()) for arg in return_value.children[1:]]
 
                     qualifier = None
                     if function_name_node:
@@ -576,8 +636,7 @@ def get_lib_methods(node, scope, lib, called_methods = []):
                                                     for child1 in child.children:
                                                         if child1.type == 'arguments':
                                                             for child2 in child1.children[1:-1]:
-                                                                arguments_nodes.append(child2.text.decode())
-
+                                                                arguments_nodes.append(format_arguments(child2.text.decode()))
 
                                                     qualifier = None
                                                     if function_name_node:
@@ -671,7 +730,7 @@ def get_argument_details(arg_node):
     # Jika argumen adalah pemanggilan fungsi seperti `bodyParser.urlencoded({ extended: true })`
     if arg_node.type == "call_expression":
         function_name_node = arg_node.child_by_field_name("function")
-        arguments_nodes = [arg.text.decode() for arg in arg_node.child_by_field_name("arguments").children] if arg_node.child_by_field_name("arguments") else []
+        arguments_nodes = [format_arguments(arg.text.decode()) for arg in arg_node.child_by_field_name("arguments").children] if arg_node.child_by_field_name("arguments") else []
 
         function_name = function_name_node.text.decode() if function_name_node else "Unknown Function"
 
@@ -692,7 +751,7 @@ def get_argument_details(arg_node):
 
 JS_LANGUAGE = Language('build/my-languages.so', 'javascript')
 
-# tree_contents = _extract_from_dir("./js/test", _parse_tree_content, "js")
+tree_contents = _extract_from_dir("./js/test", _parse_tree_content, "js")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
