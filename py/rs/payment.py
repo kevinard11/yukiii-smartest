@@ -132,7 +132,7 @@ def queueOrder(order):
     time.sleep(delay / 1000)
 
     headers = {}
-    publisher.publish(order, headers)
+    publisher._publish(order, headers)
 
 
 def countItems(items):

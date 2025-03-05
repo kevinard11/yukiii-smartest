@@ -24,12 +24,22 @@ class GlobalVariableVisitor(ast.NodeVisitor):
                 self.global_func[f"{self.current_function}"]['called_methods'].append(method_data)
             else:
                 self.global_vars['called_methods'].append(method_data)
+        elif isinstance(node.value, ast.Await) or isinstance(node.value, ast.AsyncWith) :
+            node1 = node.value
+            if isinstance(node1.value, ast.Call):
+                method_data = self.extract_method_data(node1.value)
+
+                if self.current_def and self.current_function:
+                    self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                elif self.current_function:
+                    self.global_func[self.current_function]['called_methods'].append(method_data)
+
+        # elif isinstance(node.va)
         self.generic_visit(node)
 
     def visit_Assign(self, node):
         """Mendeteksi variabel yang dideklarasikan di tingkat global"""
         for target in node.targets:
-            # print(self.current_function, self.current_def, target)
             if isinstance(target, ast.Name):  # Hanya ambil variabel (bukan atribut obj.property)
                 if self.current_def and self.current_function:
                     self.global_vars[f"{self.current_def}.{target.id}"] = self.get_value(node.value)
@@ -43,6 +53,18 @@ class GlobalVariableVisitor(ast.NodeVisitor):
                     elif self.current_function:
                         self.global_func[self.current_function]['local_vars'].update({target.id : self.get_value(node.value)})
 
+                if isinstance(node.value, ast.Await) or isinstance(node.value, ast.AsyncWith) :
+                    node1 = node.value
+                    if isinstance(node1.value, ast.Call):
+                        method_data = self.extract_method_data(node1.value)
+                        method_data["assigned_to"] = self.get_value(target)  # Ambil nama variabel yang menerima hasil
+
+                        if self.current_def and self.current_function:
+                            self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                        elif self.current_function:
+                            self.global_func[self.current_function]['called_methods'].append(method_data)
+
+
             if isinstance(node.value, ast.Call):
                 method_data = self.extract_method_data(node.value)
                 method_data["assigned_to"] = self.get_value(target)  # Ambil nama variabel yang menerima hasil
@@ -52,12 +74,13 @@ class GlobalVariableVisitor(ast.NodeVisitor):
                 elif self.current_function:
                     self.global_func[self.current_function]['called_methods'].append(method_data)
 
+
         self.generic_visit(node)
 
     def extract_method_data(self, node):
         """Mengekstrak informasi dari pemanggilan metode"""
         if isinstance(node.func, ast.Attribute):  # Jika metode dipanggil dalam objek (userService.bar)
-            qualifier = self.get_full_qualifier(node.func.value) + "." + node.func.attr if self.get_full_qualifier(node.func.value) else node.func.attr
+            qualifier = self.get_full_qualifier(node.func.value) if self.get_full_qualifier(node.func.value) else node.func.attr
             method_name = node.func.attr  # Ambil nama metode (bar)
         elif isinstance(node.func, ast.Name):  # Jika fungsi dipanggil langsung (printGo)
             qualifier = None
@@ -67,7 +90,10 @@ class GlobalVariableVisitor(ast.NodeVisitor):
             method_name = "Unknown"
 
         # Ambil argumen dalam bentuk string
+        # print(node.keywords[0].value)
         arguments = [astor.to_source(arg).strip() for arg in node.args]
+        if node.keywords:
+            arguments.extend([astor.to_source(arg.value).strip() for arg in node.keywords])
 
         return {
             "method": method_name,
@@ -97,8 +123,7 @@ class GlobalVariableVisitor(ast.NodeVisitor):
                 "type": param_type
                 })
 
-        if params:
-            local_vars['Parameter'] = params
+        local_vars['Parameter'] = params
 
         # return_type = self.get_annotation(node.returns)  # Ambil tipe return jika ada
         # return_values = self.get_return_values(node)  # Ambil return values dalam fungsi
@@ -116,6 +141,81 @@ class GlobalVariableVisitor(ast.NodeVisitor):
 
         self.current_function = None
 
+    def visit_AsyncFunctionDef(self, node):
+        """Extract variables from async functions"""
+        local_vars = {}
+        params = []
+
+        self.current_function = node.name
+        for arg in node.args.args:
+            param_name = arg.arg  # Nama parameter
+            param_type = self.get_annotation(arg.annotation)  # Ambil tipe parameter
+            params.append({
+                "name": param_name,
+                "type": param_type
+                })
+
+        local_vars['Parameter'] = params
+
+        # return_type = self.get_annotation(node.returns)  # Ambil tipe return jika ada
+        # return_values = self.get_return_values(node)  # Ambil return values dalam fungsi
+        path = f"{self.current_def}.{self.current_function}" if self.current_def else self.current_function
+        self.global_func[path] = {
+            'local_vars': local_vars,
+            'called_methods': []
+        }
+
+        self.generic_visit(node)
+        return_values, return_type  = self.get_return_values(node)
+
+        if return_type:
+            self.global_func[path]['local_vars']['Return'] = return_type
+
+        self.current_function = None
+
+    def visit_With(self, node):
+        for item in node.items:
+            if isinstance(item.context_expr, ast.Call):  # Detects function call
+                func = item.context_expr.func
+                name = item.optional_vars.id
+
+                # Check if it is urllib.request.urlopen
+                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Attribute):
+                    method = self.extract_method_data(item.context_expr)
+                    self.global_vars[name] = method
+
+        self.generic_visit(node)
+
+    def visit_AsyncWith(self, node):
+        for item in node.items:
+            if isinstance(item.context_expr, ast.Call):  # Detects function call
+                func = item.context_expr.func
+                name = item.optional_vars.id
+
+                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Attribute):
+                    method = self.extract_method_data(item.context_expr)
+                    if self.current_function:
+                        self.global_func[f"{self.current_function}"]['local_vars'][name] = method
+                    else:
+                        self.global_vars[f"{name}"] = method
+                elif isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+                    method = self.extract_method_data(item.context_expr)
+                    if self.current_function:
+                        self.global_func[f"{self.current_function}"]['local_vars'][name] = method
+                    else:
+                        self.global_vars[f"{name}"] = method
+
+                if self.current_function:
+                    if isinstance(item.context_expr, ast.Call):
+                        method_data = self.extract_method_data(item.context_expr)
+                        method_data["assigned_to"] = name
+
+                        if self.current_def and self.current_function:
+                            self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                        elif self.current_function:
+                            self.global_func[self.current_function]['called_methods'].append(method_data)
+
+        self.generic_visit(node)
 
     def get_return_values(self, node):
         """Mengembalikan daftar nilai yang direturn dalam fungsi sebagai list"""
@@ -152,9 +252,10 @@ class GlobalVariableVisitor(ast.NodeVisitor):
 
     def get_value(self, node):
         """Mengubah node AST ke dalam bentuk Python yang bisa dibaca"""
-        # print(node)
         if isinstance(node, ast.Str):  # Python < 3.8 String
             return f'"{node.s}"'
+        elif isinstance(node, ast.Await):
+            return self.get_value(node.value)
         elif isinstance(node, ast.Num):  # Python < 3.8 Angka
             return node.n
         elif isinstance(node, ast.NameConstant):  # Python < 3.8 Boolean/None
@@ -336,10 +437,73 @@ class FunctionCallVisitor(ast.NodeVisitor):
         self.current_function = None
         self.current_def = None
 
+    def visit_Expr(self, node):
+        """Mendeteksi ekspresi metode yang dipanggil tanpa assignment"""
+        if isinstance(node.value, ast.Call):
+            method_data = self.extract_method_data(node.value)
+            if self.current_def and self.current_function:
+                self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+            elif self.current_function:
+                self.global_func[f"{self.current_function}"]['called_methods'].append(method_data)
+            else:
+                self.global_vars['called_methods'].append(method_data)
+        elif isinstance(node.value, ast.Await) or isinstance(node.value, ast.AsyncWith) :
+            node1 = node.value
+            if isinstance(node1.value, ast.Call):
+                method_data = self.extract_method_data(node1.value)
+
+                if self.current_def and self.current_function:
+                    self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                elif self.current_function:
+                    self.global_func[self.current_function]['called_methods'].append(method_data)
+
+        # elif isinstance(node.va)
+        self.generic_visit(node)
+
+    def visit_Assign(self, node):
+        """Mendeteksi variabel yang dideklarasikan di tingkat global"""
+        for target in node.targets:
+            if isinstance(target, ast.Name):  # Hanya ambil variabel (bukan atribut obj.property)
+                if self.current_def and self.current_function:
+                    self.global_vars[f"{self.current_def}.{target.id}"] = self.get_value(node.value)
+                elif self.current_def and not self.current_function:
+                    self.global_vars[f"{self.current_def}.{target.id}"] = self.get_value(node.value)
+                elif not self.current_function:
+                    self.global_vars[target.id] = self.get_value(node.value)
+                else:
+                    if self.current_def and self.current_function:
+                        self.global_func[f"{self.current_def}.{self.current_function}"]['local_vars'].update({target.id : self.get_value(node.value)})
+                    elif self.current_function:
+                        self.global_func[self.current_function]['local_vars'].update({target.id : self.get_value(node.value)})
+
+                if isinstance(node.value, ast.Await) or isinstance(node.value, ast.AsyncWith) :
+                    node1 = node.value
+                    if isinstance(node1.value, ast.Call):
+                        method_data = self.extract_method_data(node1.value)
+                        method_data["assigned_to"] = self.get_value(target)  # Ambil nama variabel yang menerima hasil
+
+                        if self.current_def and self.current_function:
+                            self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                        elif self.current_function:
+                            self.global_func[self.current_function]['called_methods'].append(method_data)
+
+
+            if isinstance(node.value, ast.Call):
+                method_data = self.extract_method_data(node.value)
+                method_data["assigned_to"] = self.get_value(target)  # Ambil nama variabel yang menerima hasil
+
+                if self.current_def and self.current_function:
+                    self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                elif self.current_function:
+                    self.global_func[self.current_function]['called_methods'].append(method_data)
+
+
+        self.generic_visit(node)
+
     def extract_method_data(self, node):
         """Mengekstrak informasi dari pemanggilan metode"""
         if isinstance(node.func, ast.Attribute):  # Jika metode dipanggil dalam objek (userService.bar)
-            qualifier = self.get_full_qualifier(node.func.value) + "." + node.func.attr if self.get_full_qualifier(node.func.value) else node.func.attr
+            qualifier = self.get_full_qualifier(node.func.value) if self.get_full_qualifier(node.func.value) else node.func.attr
             method_name = node.func.attr  # Ambil nama metode (bar)
         elif isinstance(node.func, ast.Name):  # Jika fungsi dipanggil langsung (printGo)
             qualifier = None
@@ -349,7 +513,10 @@ class FunctionCallVisitor(ast.NodeVisitor):
             method_name = "Unknown"
 
         # Ambil argumen dalam bentuk string
+        # print(node.keywords[0].value)
         arguments = [astor.to_source(arg).strip() for arg in node.args]
+        if node.keywords:
+            arguments.extend([astor.to_source(arg.value).strip() for arg in node.keywords])
 
         return {
             "method": method_name,
@@ -385,6 +552,8 @@ class FunctionCallVisitor(ast.NodeVisitor):
         # print(node)
         if isinstance(node, ast.Str):  # Python < 3.8 String
             return f'"{node.s}"'
+        elif isinstance(node, ast.Await):
+            return self.get_value(node.value)
         elif isinstance(node, ast.Num):  # Python < 3.8 Angka
             return node.n
         elif isinstance(node, ast.NameConstant):  # Python < 3.8 Boolean/None
@@ -569,6 +738,86 @@ class FunctionCallVisitor(ast.NodeVisitor):
                 "local_vars": {"Parameter": parameters, **local_vars},
                 "called_method": called_methods
             }
+
+        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        """Extract variables from async functions"""
+        local_vars = {}
+        params = []
+
+        class_name = self.get_class_name(node)
+        if class_name and self.current_def:
+            func_path = f"{self.current_def}.{class_name}"
+
+        self.current_function = func_path
+        for arg in node.args.args:
+            param_name = arg.arg  # Nama parameter
+            param_type = self.get_annotation(arg.annotation)  # Ambil tipe parameter
+            params.append({
+                "name": param_name,
+                "type": param_type
+                })
+
+        local_vars['Parameter'] = params
+
+        # return_type = self.get_annotation(node.returns)  # Ambil tipe return jika ada
+        # return_values = self.get_return_values(node)  # Ambil return values dalam fungsi
+        path = f"{self.current_def}.{self.current_function}" if self.current_def else self.current_function
+        self.global_func[path] = {
+            'local_vars': local_vars,
+            'called_methods': []
+        }
+
+        self.generic_visit(node)
+        return_values, return_type  = self.get_return_values(node)
+
+        if return_type:
+            self.global_func[path]['local_vars']['Return'] = return_type
+
+        self.current_function = None
+
+    def visit_With(self, node):
+        for item in node.items:
+            if isinstance(item.context_expr, ast.Call):  # Detects function call
+                func = item.context_expr.func
+                name = item.optional_vars.id
+
+                # Check if it is urllib.request.urlopen
+                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Attribute):
+                    method = self.extract_method_data(item.context_expr)
+                    self.global_vars[name] = method
+
+        self.generic_visit(node)
+
+    def visit_AsyncWith(self, node):
+        for item in node.items:
+            if isinstance(item.context_expr, ast.Call):  # Detects function call
+                func = item.context_expr.func
+                name = item.optional_vars.id
+
+                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Attribute):
+                    method = self.extract_method_data(item.context_expr)
+                    if self.current_function:
+                        self.global_func[f"{self.current_function}"]['local_vars'][name] = method
+                    else:
+                        self.global_vars[f"{name}"] = method
+                elif isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+                    method = self.extract_method_data(item.context_expr)
+                    if self.current_function:
+                        self.global_func[f"{self.current_function}"]['local_vars'][name] = method
+                    else:
+                        self.global_vars[f"{name}"] = method
+
+                if self.current_function:
+                    if isinstance(item.context_expr, ast.Call):
+                        method_data = self.extract_method_data(item.context_expr)
+                        method_data["assigned_to"] = name
+
+                        if self.current_def and self.current_function:
+                            self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                        elif self.current_function:
+                            self.global_func[self.current_function]['called_methods'].append(method_data)
 
         self.generic_visit(node)
 
