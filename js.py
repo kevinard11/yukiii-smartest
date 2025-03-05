@@ -63,6 +63,20 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
     return variable_func
 
+def get_value(node):
+    if node.type == "array":
+        return [v.text.decode() for v in node.children]
+    elif node.type == "number":
+        return int(node.text)
+    elif node.type == "string":
+        return node.text.decode()
+    elif node.type == "true" or node.type == "false":
+        return node.type == "true"
+    elif node.type == "binary_expression":
+        return get_binary_expressions(node)
+    else:
+        return None
+
 def get_global_variables(node, scope):
     """Mencari global variables dan nilai awalnya"""
     global_vars = {}
@@ -78,7 +92,24 @@ def get_global_variables(node, scope):
                     # Jika variabel adalah hasil pemanggilan fungsi
                     if var_value and var_value.type == "call_expression":
                         function_name_node = var_value.child_by_field_name("function")
-                        arguments_nodes = [arg.text.decode() for arg in var_value.children[1:]]
+                        # arguments_nodes = [arg.text.decode() for arg in var_value.children[1:]]
+
+                        arguments_nodes = []
+
+                        for args in var_value.children[1:]:
+                            if args.type == 'arguments':
+                                for arg in args.children:
+                                    if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                        if arg.type == 'object':
+                                            for arg_child in arg.children:
+                                                if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                                    if arg_child.type == 'pair':
+                                                        for arg_child1 in arg_child.children:
+                                                            if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                                arguments_nodes.append(get_value(arg_child1))
+
+                                        else:
+                                            arguments_nodes.append(arg.text.decode())
 
                         if function_name_node:
                             function_name = function_name_node.text.decode()
@@ -100,19 +131,7 @@ def get_global_variables(node, scope):
 
                     # Jika variabel bukan hasil pemanggilan fungsi, simpan nilainya langsung
                     else:
-                        if var_value.type == "array":
-                            values = [v.text.decode() for v in var_value.children]
-                            global_vars[full_var_name] = values
-                        elif var_value.type == "number":
-                            global_vars[full_var_name] = int(var_value.text)
-                        elif var_value.type == "string":
-                            global_vars[full_var_name] = var_value.text.decode()
-                        elif var_value.type == "true" or var_value.type == "false":
-                            global_vars[full_var_name] = var_value.type == "true"
-                        elif var_value.type == "binary_expression":
-                            global_vars[full_var_name] = get_binary_expressions(var_value)
-                        else:
-                            global_vars[full_var_name] = None
+                        global_vars[full_var_name] = get_value(var_value)
 
                 if var_value and var_value.type == "member_expression":
                     # print(var_value.type == "member_expression")
@@ -153,7 +172,24 @@ def get_global_variables(node, scope):
                         # Jika variabel adalah hasil pemanggilan fungsi
                         if var_value and var_value.type == "call_expression":
                             function_name_node = var_value.child_by_field_name("function")
-                            arguments_nodes = [arg.text.decode() for arg in var_value.children[1:]]
+                            # arguments_nodes = [arg.text.decode() for arg in var_value.children[1:]]
+
+                            arguments_nodes = []
+
+                            for args in var_value.children[1:]:
+                                if args.type == 'arguments':
+                                    for arg in args.children:
+                                        if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                            if arg.type == 'object':
+                                                for arg_child in arg.children:
+                                                    if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                                        if arg_child.type == 'pair':
+                                                            for arg_child1 in arg_child.children:
+                                                                if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                                    arguments_nodes.append(get_value(arg_child1))
+
+                                    else:
+                                        arguments_nodes.append(arg.text.decode())
 
                             qualifier = None
                             if function_name_node:
@@ -227,7 +263,24 @@ def get_global_called_methods(node , scope):
             if expr.type == "call_expression" and not is_inside_function(child):
                 # print(expr.children[0].children[0].text.decode())
                 function_name_node = expr.child_by_field_name("function")
-                arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+                # arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+
+                arguments_nodes = []
+
+                for args in expr.children[1:]:
+                    if args.type == 'arguments':
+                        for arg in args.children:
+                            if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                if arg.type == 'object':
+                                    for arg_child in arg.children:
+                                        if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                            if arg_child.type == 'pair':
+                                                for arg_child1 in arg_child.children:
+                                                    if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                        arguments_nodes.append(get_value(arg_child1))
+
+                                else:
+                                    arguments_nodes.append(arg.text.decode())
                 # print(arguments_nodes)
 
                 if function_name_node:
@@ -254,7 +307,24 @@ def get_global_called_methods(node , scope):
                 if expr1.type == "call_expression" and not is_inside_function(child):
                     # print(expr1.children[0].children[0].text.decode())
                     function_name_node = expr1.child_by_field_name("function")
-                    arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr1.children[1:]]
+                    # arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr1.children[1:]]
+
+                    arguments_nodes = []
+
+                    for args in expr1.children[1:]:
+                        if args.type == 'arguments':
+                            for arg in args.children:
+                                if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                    if arg.type == 'object':
+                                        for arg_child in arg.children:
+                                            if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                                if arg_child.type == 'pair':
+                                                    for arg_child1 in arg_child.children:
+                                                        if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                            arguments_nodes.append(get_value(arg_child1))
+
+                                    else:
+                                        arguments_nodes.append(arg.text.decode())
                     # print(arguments_nodes)
 
                     if function_name_node:
@@ -275,7 +345,24 @@ def get_global_called_methods(node , scope):
             elif expr.type == "call_expression" and not is_inside_function(child):
                 # print(expr.children[0].children[0].text.decode())
                 function_name_node = expr.child_by_field_name("function")
-                arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+                # arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+
+                arguments_nodes = []
+
+                for args in expr.children[1:]:
+                    if args.type == 'arguments':
+                        for arg in args.children:
+                            if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                if arg.type == 'object':
+                                    for arg_child in arg.children:
+                                        if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                            if arg_child.type == 'pair':
+                                                for arg_child1 in arg_child.children:
+                                                    if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                        arguments_nodes.append(get_value(arg_child1))
+
+                                else:
+                                    arguments_nodes.append(arg.text.decode())
                 # print(arguments_nodes)
 
                 if function_name_node:
@@ -331,7 +418,7 @@ def get_called_methods(node):
     called_methods = []
 
     for child in node.children:
-        # print(child.children)
+        # print(child)
 
         # Mendeteksi pemanggilan fungsi langsung di dalam fungsi
         if child.type == "expression_statement":
@@ -339,7 +426,24 @@ def get_called_methods(node):
             expr = child.children[0] if len(child.children) > 0 else None
             if expr and expr.type == "call_expression":
                 function_name_node = expr.child_by_field_name("function")
-                arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+                # arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr.children[1:]]
+                arguments_nodes = []
+
+                for args in expr.children[1:]:
+                    if args.type == 'arguments':
+                        for arg in args.children:
+                            if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                if arg.type == 'object':
+                                    for arg_child in arg.children:
+                                        if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                            if arg_child.type == 'pair':
+                                                for arg_child1 in arg_child.children:
+                                                    if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                        arguments_nodes.append(get_value(arg_child1))
+
+                                else:
+                                    arguments_nodes.append(arg.text.decode())
+
                 qualifier = None
 
                 if function_name_node:
@@ -354,6 +458,43 @@ def get_called_methods(node):
                         "arguments": arguments_nodes,
                         "qualifier": qualifier
                     })
+
+            elif expr and expr.type == "await_expression":
+                expr1 = expr.children[1]
+                if expr1 and expr1.type == "call_expression":
+                    function_name_node = expr1.child_by_field_name("function")
+                    # arguments_nodes = [format_arguments(arg.text.decode()) for arg in expr1.children[1:]]
+                    arguments_nodes = []
+
+                    for args in expr1.children[1:]:
+                        if args.type == 'arguments':
+                            for arg in args.children:
+                                if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                    if arg.type == 'object':
+                                        for arg_child in arg.children:
+                                            if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                                if arg_child.type == 'pair':
+                                                    for arg_child1 in arg_child.children:
+                                                        if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                            arguments_nodes.append(get_value(arg_child1))
+
+                                    else:
+                                        arguments_nodes.append(arg.text.decode())
+
+                    qualifier = None
+
+                    if function_name_node:
+                        function_name = function_name_node.text.decode()
+                        if "." in function_name:
+                            parts = function_name.split(".")
+                            qualifier = ".".join(parts[:-1])
+                            function_name = parts[-1]
+
+                        called_methods.append({
+                            "method": function_name,
+                            "arguments": arguments_nodes,
+                            "qualifier": qualifier
+                        })
 
         # Rekursif untuk mencari variabel dan pemanggilan fungsi lebih dalam
         deeper_methods = get_called_methods(child)
@@ -380,7 +521,24 @@ def get_local_variables(node):
                         # Jika variabel adalah hasil pemanggilan fungsi
                         if var_value and var_value.type == "call_expression":
                             function_name_node = var_value.child_by_field_name("function")
-                            arguments_nodes = [format_arguments(arg.text.decode()) for arg in var_value.children[1:]]
+                            # arguments_nodes = [format_arguments(arg.text.decode()) for arg in var_value.children[1:]]
+
+                            arguments_nodes = []
+
+                            for args in var_value.children[1:]:
+                                if args.type == 'arguments':
+                                    for arg in args.children:
+                                        if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                            if arg.type == 'object':
+                                                for arg_child in arg.children:
+                                                    if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                                        if arg_child.type == 'pair':
+                                                            for arg_child1 in arg_child.children:
+                                                                if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                                    arguments_nodes.append(get_value(arg_child1))
+
+                                            else:
+                                                arguments_nodes.append(arg.text.decode())
 
                             qualifier = None
                             if function_name_node:
@@ -414,7 +572,24 @@ def get_local_variables(node):
                     # Jika variabel adalah hasil pemanggilan fungsi
                     if var_value and var_value.type == "call_expression":
                         function_name_node = var_value.child_by_field_name("function")
-                        arguments_nodes = [format_arguments(arg.text.decode()) for arg in var_value.children[1:]]
+                        # arguments_nodes = [format_arguments(arg.text.decode()) for arg in var_value.children[1:]]
+
+                        arguments_nodes = []
+
+                        for args in var_value.children[1:]:
+                            if args.type == 'arguments':
+                                for arg in args.children:
+                                    if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                        if arg.type == 'object':
+                                            for arg_child in arg.children:
+                                                if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                                    if arg_child.type == 'pair':
+                                                        for arg_child1 in arg_child.children:
+                                                            if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                                arguments_nodes.append(get_value(arg_child1))
+
+                                        else:
+                                            arguments_nodes.append(arg.text.decode())
 
                         qualifier = None
                         if function_name_node:
@@ -452,6 +627,7 @@ def get_functions(node, global_vars, scope):
         if child.type == "function_declaration":
             function_name = child.child_by_field_name("name")
             function_body = child.child_by_field_name("body")
+            # print(function_name, function_body)
 
             if function_name and function_body:
                 function_name_text = function_name.text.decode()
@@ -468,11 +644,11 @@ def get_functions(node, global_vars, scope):
                 if return_type:
                     local_vars["Return"] = return_type
 
-
                 functions[full_function_name] = {
                     "local_vars": local_vars,
                     "called_methods": called_methods
                 }
+
 
         # Rekursif mencari fungsi dalam node lainnya
         functions.update(get_functions(child, global_vars, scope))
@@ -514,7 +690,6 @@ def get_value_type(value_node):
     else:
         return "Unknown Type"
 
-
 def get_return_type(node, local_vars, global_vars):
     """Menganalisis return type dalam fungsi"""
     return_types = []
@@ -532,7 +707,24 @@ def get_return_type(node, local_vars, global_vars):
                 # Jika return adalah pemanggilan fungsi
                 elif return_value.type == "call_expression":
                     function_name_node = return_value.child_by_field_name("function")
-                    arguments_nodes = [format_arguments(arg.text.decode()) for arg in return_value.children[1:]]
+                    # arguments_nodes = [format_arguments(arg.text.decode()) for arg in return_value.children[1:]]
+
+                    arguments_nodes = []
+
+                    for args in return_value.children[1:]:
+                        if args.type == 'arguments':
+                            for arg in args.children:
+                                if arg.text.decode() != '(' and arg.text.decode() != ',' and arg.text.decode() != ')':
+                                    if arg.type == 'object':
+                                        for arg_child in arg.children:
+                                            if arg_child.text.decode() != '{' and arg_child.text.decode() != ',' and arg_child.text.decode() != '}':
+                                                if arg_child.type == 'pair':
+                                                    for arg_child1 in arg_child.children:
+                                                        if arg_child1.type != 'property_identifier' and arg_child1.type != ':':
+                                                            arguments_nodes.append(get_value(arg_child1))
+
+                                    else:
+                                        arguments_nodes.append(arg.text.decode())
 
                     qualifier = None
                     if function_name_node:
@@ -730,7 +922,7 @@ def get_argument_details(arg_node):
     # Jika argumen adalah pemanggilan fungsi seperti `bodyParser.urlencoded({ extended: true })`
     if arg_node.type == "call_expression":
         function_name_node = arg_node.child_by_field_name("function")
-        arguments_nodes = [format_arguments(arg.text.decode()) for arg in arg_node.child_by_field_name("arguments").children] if arg_node.child_by_field_name("arguments") else []
+        # arguments_nodes = [format_arguments(arg.text.decode()) for arg in arg_node.child_by_field_name("arguments").children] if arg_node.child_by_field_name("arguments") else []
 
         function_name = function_name_node.text.decode() if function_name_node else "Unknown Function"
 
@@ -751,7 +943,7 @@ def get_argument_details(arg_node):
 
 JS_LANGUAGE = Language('build/my-languages.so', 'javascript')
 
-tree_contents = _extract_from_dir("./js/test", _parse_tree_content, "js")
+# tree_contents = _extract_from_dir("./js/test", _parse_tree_content, "js")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))

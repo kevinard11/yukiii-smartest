@@ -33,6 +33,7 @@ def get_feign_called_service(feign_funcs, called_method, global_vars, called_ser
                 if baseurl.startswith('"${') and baseurl.endswith('}"'):
                     baseurl = baseurl.replace('"${', '').replace('}"', '')
                     baseurl = find_in_global_vars(global_vars, baseurl)
+                    baseurl = format_baseurl(baseurl)
 
                     if baseurl in service_base_url.values():
                         called_service = find_in_service_base_url(service_base_url, baseurl)
@@ -46,7 +47,8 @@ def get_feign_called_service(feign_funcs, called_method, global_vars, called_ser
                         break
 
                 elif baseurl.startswith('"') and baseurl.endswith('"'):
-                    baseurl = baseurl.replace('"', '').replace('"', '')
+                    # baseurl = baseurl.replace('"', '').replace('"', '')
+                    baseurl = format_baseurl(baseurl)
                     if baseurl in service_base_url.values():
                         called_service = find_in_service_base_url(service_base_url, baseurl)
                         # print(baseurl, called_service, called_service in called_services)
@@ -64,11 +66,10 @@ def get_all_MQ_client_function(functions, global_vars):
         if function:
             for func in function['called_methods']:
                 if func['method'] in MQ_framework.keys():
-                    # print(func['arguments'])
+                    # print(func['method'], func['arguments'])
                     if MQ_framework[func['method']] == len(func['arguments']) and 'template' in func['qualifier'].lower():
                         MQ_funcs[key] = function
                     elif MQ_framework[func['method']] == len(func['arguments']):
-                        # print(function['local_vars'], func['arguments'])
                         MQ_funcs[key] = function
 
     for key, global_var in global_vars.items():
@@ -120,6 +121,7 @@ def get_MQ_called_service(MQ_funcs, called_method, global_vars, called_services,
                             arg = arg.replace('"', '').replace('${', '').replace('}', '').replace("'")
                             baseurl = find_in_local_global_vars(global_vars, local_vars, arg, nearest_key)
                             if baseurl:
+                                baseurl = format_baseurl(baseurl)
                                 if any(baseurl in values for values in service_queue_topic.values()):
                                     called_queue = find_in_service_queue_topic(service_queue_topic, baseurl)
                                     for called_service in called_queue:
@@ -153,6 +155,7 @@ def get_MQ_called_service(MQ_funcs, called_method, global_vars, called_services,
                             arg = arg.replace('"', '').replace('${', '').replace('}', '').replace("'")
                             baseurl = find_in_local_global_vars(global_vars, local_vars, arg, nearest_key)
                             if baseurl:
+                                baseurl = format_baseurl(baseurl)
                                 if any(baseurl in values for values in service_queue_topic.values()):
                                     called_queue = find_in_service_queue_topic(service_queue_topic, baseurl)
                                     for called_service in called_queue:
@@ -168,9 +171,9 @@ def get_MQ_called_service(MQ_funcs, called_method, global_vars, called_services,
             if found:
                 break
 
-    # print(method_name, MQ_framework[method_name], len(method_args))
     if not found:
         if method_name in MQ_framework.keys() and MQ_framework[method_name] == len(method_args):
+            # print(method_name)
             for arg in method_args:
                 if arg and isinstance(arg, str) and (arg.startswith('"') or arg.startswith("'")) and (arg.endswith('"') or arg.endswith("'")):
                     arg = arg.replace('"', '').replace("'", '')
@@ -190,6 +193,7 @@ def get_MQ_called_service(MQ_funcs, called_method, global_vars, called_services,
                     arg = arg.replace('"', '').replace('${', '').replace('}', '').replace("'", '')
                     baseurl = find_in_local_global_vars(global_vars, local_vars, arg, nearest_key)
                     if baseurl:
+                        baseurl = format_baseurl(baseurl)
                         if any(baseurl in values for values in service_queue_topic.values()):
                             called_queue = find_in_service_queue_topic(service_queue_topic, baseurl)
                             for called_service in called_queue:
@@ -205,6 +209,13 @@ def get_MQ_called_service(MQ_funcs, called_method, global_vars, called_services,
     # print(method_name, method_args, found)
     # print(called_services)
 
+def format_baseurl(baseurl):
+    if baseurl.startswith('"') or baseurl.startswith("'"):
+        baseurl = baseurl[1:]
+
+    if baseurl.endswith('"') or baseurl.endswith("'"):
+        baseurl = baseurl[:-1]
+    return baseurl
 def get_called_service(global_vars, functions, service_base_url, service_queue_topic):
     called_services = {}
 
@@ -332,7 +343,7 @@ lang = 'js'
 # dir_path = "D://DATA//java//intellij//bravo-agent-service//src//main"
 # dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
 # dir_path = "C://Users//ARD//Desktop//robot-shop"
-dir_path = "./js/rs"
+dir_path = "./js/test"
 tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
 variable_func = lang_list[lang]['func'](tree_contents)
@@ -369,6 +380,8 @@ MQ_framework = {
     "queue_declare": 5, "basic_publish": 3, # Php rabbitMQ (php-amqplib)
     "createQueue": 1, "send": 2, # Php rabbitMQ (enqueue-amqlib)
     "set": 2, "newTopic": 1, "produce": 4, # Php kafka (php-rdkafka)
+    "sendToQueue": 2, # Js rabbitMQ (amqlib)
+    "send": 2, # Js kafka (kafkajs)
 
 }
 

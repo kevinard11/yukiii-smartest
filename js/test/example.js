@@ -21,3 +21,43 @@ const got = require('got');
     console.error(error);
   }
 })();
+
+const amqp = require('amqplib');
+
+async function sendMessage() {
+    const connection = await amqp.connect('amqp://localhost');
+    const channel = await connection.createChannel();
+    const queue = 'agent_queue';
+
+    await channel.assertQueue(queue, { durable: false });
+    channel.sendToQueue(queue, Buffer.from('Hello, RabbitMQ!'));
+
+    console.log(" [x] Sent 'Hello, RabbitMQ!'");
+    setTimeout(() => {
+        connection.close();
+    }, 500);
+}
+
+sendMessage();
+
+const { Kafka } = require('kafkajs');
+
+const kafka = new Kafka({
+    clientId: 'my-app',
+    brokers: ['localhost:9092']
+});
+
+const producer = kafka.producer();
+
+async function sendMessages() {
+    await producer.connect();
+    await producer.send({
+        topic: 'agent_queue',
+        messages: [{ value: 'Hello, Kafka!' }],
+    });
+
+    console.log(" [x] Sent 'Hello, Kafka!'");
+    await producer.disconnect();
+};
+
+sendMessage();
