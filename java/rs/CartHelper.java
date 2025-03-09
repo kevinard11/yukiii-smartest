@@ -72,8 +72,4 @@ public class CartHelper {
         // this will be empty on error
         return buffer.toString();
     }
-
-    public void sendMessage() {
-        rabbitTemplate.convertAndSend("sdsaa", "routingKey", "Hello World");
-    }
 }

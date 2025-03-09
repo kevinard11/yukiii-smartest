@@ -91,9 +91,24 @@ class GlobalVariableVisitor(ast.NodeVisitor):
 
         # Ambil argumen dalam bentuk string
         # print(node.keywords[0].value)
-        arguments = [astor.to_source(arg).strip() for arg in node.args]
+        # arguments = [astor.to_source(arg).strip() for arg in node.args]
+
+        arguments = []
+        if node.args:
+            for arg in node.args:
+                if isinstance(arg, ast.Call) and arg.keywords:
+                    arguments.append(self.visit_call_keyword(arg))
+                else:
+                    arguments.append(self.get_value(arg))
+
         if node.keywords:
-            arguments.extend([astor.to_source(arg.value).strip() for arg in node.keywords])
+            # arguments.extend([astor.to_source(arg.value).strip() for arg in node.keywords])
+            for kw in node.keywords:
+                value = astor.to_source(kw.value).strip()
+                if "self." in value:
+                    value = value.replace("self.",'')
+
+                arguments.append(value)
 
         return {
             "method": method_name,
@@ -118,10 +133,11 @@ class GlobalVariableVisitor(ast.NodeVisitor):
         for arg in node.args.args:
             param_name = arg.arg  # Nama parameter
             param_type = self.get_annotation(arg.annotation)  # Ambil tipe parameter
-            params.append({
-                "name": param_name,
-                "type": param_type
-                })
+            if param_name != 'self':
+                params.append({
+                    "name": param_name,
+                    "type": param_type
+                    })
 
         local_vars['Parameter'] = params
 
@@ -275,10 +291,10 @@ class GlobalVariableVisitor(ast.NodeVisitor):
         elif isinstance(node, ast.BinOp):  # Operasi seperti 5 + 3
             return f"({self.get_value_BinOp(node.left)} {self.get_operator_BinOp(node.op)} {self.get_value_BinOp(node.right)})"
         elif isinstance(node, ast.Call):  # Panggilan fungsi seperti func()
-            arguments = []
-            if node.args:
-                for arg in node.args:
-                    arguments.append(self.get_value(arg))
+            # arguments = []
+            # if node.args:
+            #     for arg in node.args:
+            #         arguments.append(self.get_value(arg))
 
             return self.visit_Call(node)
 
@@ -286,8 +302,34 @@ class GlobalVariableVisitor(ast.NodeVisitor):
             return self.get_value(node.value) + "[" + self.get_value(node.slice) + "]"
         return "Unknown Type"
 
+    def visit_call_keyword(self, node):
+        if isinstance(node, ast.Call):
+            # print(node.func.value.s)
+            if isinstance(node.func.value, ast.Str) and node.func.attr == 'format' :
+                # Ambil string format awal
+                format_str = node.func.value.s
+                new_values = {}
+                for kw in node.keywords:
+                    value = self.get_value(kw.value)
+                    if value and isinstance(value, str):
+                        value = value.replace("'",'').replace('"','')
+                    new_values[kw.arg] = value
+
+                # Gantikan placeholder `{var}` dengan namanya langsung
+                new_str = format_str.format(**new_values)
+                return f'"{new_str}"'
+            else:
+                return astor.to_source(node.func.value).strip()
+
     def visit_Call(self, node):
-        arguments = [self.get_value(arg) for arg in node.args]  # Ambil argumen
+        # arguments = [self.get_value(arg) for arg in node.args]  # Ambil argumen
+        arguments = []
+        if node.args:
+            for arg in node.args:
+                if isinstance(arg, ast.Call) and arg.keywords:
+                    arguments.append(self.visit_call_keyword(arg))
+                else:
+                    arguments.append(self.get_value(arg))
 
         if isinstance(node.func, ast.Name):  # Contoh: func()
             method_name = node.func.id
@@ -514,9 +556,24 @@ class FunctionCallVisitor(ast.NodeVisitor):
 
         # Ambil argumen dalam bentuk string
         # print(node.keywords[0].value)
-        arguments = [astor.to_source(arg).strip() for arg in node.args]
+        # arguments = [astor.to_source(arg).strip() for arg in node.args]
+
+        arguments = []
+        if node.args:
+            for arg in node.args:
+                if isinstance(arg, ast.Call) and arg.keywords:
+                    arguments.append(self.visit_call_keyword(arg))
+                else:
+                    arguments.append(self.get_value(arg))
+
         if node.keywords:
-            arguments.extend([astor.to_source(arg.value).strip() for arg in node.keywords])
+            # arguments.extend([astor.to_source(arg.value).strip() for arg in node.keywords])
+            for kw in node.keywords:
+                value = astor.to_source(kw.value).strip()
+                if "self." in value:
+                    value = value.replace("self.",'')
+
+                arguments.append(value)
 
         return {
             "method": method_name,
@@ -584,8 +641,35 @@ class FunctionCallVisitor(ast.NodeVisitor):
             return self.get_value(node.value) + "[" + self.get_value(node.slice) + "]"
         return "Unknown Type"
 
+    def visit_call_keyword(self, node):
+        if isinstance(node, ast.Call):
+            # print(node.func.value.s)
+            if isinstance(node.func.value, ast.Str):
+                # Ambil string format awal
+                format_str = node.func.value.s
+                new_values = {}
+                for kw in node.keywords:
+                    value = self.get_value(kw.value)
+                    if value and isinstance(value, str):
+                        value = value.replace("'",'').replace('"','')
+                    new_values[kw.arg] = value
+
+                # Gantikan placeholder `{var}` dengan namanya langsung
+                new_str = format_str.format(**new_values)
+                return f'"{new_str}"'
+
+            else:
+                return astor.to_source(node.func.value).strip()
+
     def visit_Call(self, node):
-        arguments = [self.get_value(arg) for arg in node.args]  # Ambil argumen
+        # arguments = [self.get_value(arg) for arg in node.args]  # Ambil argumen
+        arguments = []
+        if node.args:
+            for arg in node.args:
+                if isinstance(arg, ast.Call) and isinstance(arg.func, ast.Attribute) and arg.func.attr == 'format' and arg.keywords:
+                        arguments.append(self.visit_call_keyword(arg))
+                else:
+                    arguments.append(self.get_value(arg))
 
         if isinstance(node.func, ast.Name):  # Contoh: func()
             method_name = node.func.id
@@ -849,7 +933,7 @@ def _extract_from_dir(dir_path, parser, lang) -> dict:
                 file_path = os.path.join(dirpath, filename)
                 file_content = parser(file_path)
                 # package = _parse_tree_package(file_content)
-                package = dirpath.replace('./','').replace('/','.')
+                package = dirpath.replace('./','').replace('/','.').replace('\\','.').replace('..','.')
 
                 if package:
                     key = package + "." + filename.replace(f".{lang}", "")
@@ -908,5 +992,6 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['functions'], indent=2))
 # print(variable_func)
 

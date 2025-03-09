@@ -64,12 +64,24 @@ def get_value(node):
                         value = get_value(child.children[2])
                         map_values[key] = value
             return map_values
+        elif node.child_by_field_name("type").type == 'qualified_type':
+            for child in node.children:
+                if child.type == 'literal_value':
+                    map_values = {}
+                    for child1 in child.children:
+                        if child1.type == "keyed_element":  # Key-value pair
+                            key = get_value(child1.children[0])
+                            value = get_value(child1.children[2])
+                            map_values[key] = value
+            return map_values
+
     elif node.type == 'call_expression':
         qualifier = ''
         function_name = ''
         arguments_nodes = []
 
         for child in node.children:
+            # print(child, child.text.decode())
             if child.type == 'selector_expression':
                 selector = child.text.decode().split('.')
                 function_name = selector[-1]

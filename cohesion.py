@@ -93,6 +93,8 @@ def get_all_class(functions):
 
 def get_all_function(functions):
     function = {item.rsplit('.', 1)[-1] for item in functions.keys()}
+
+    # function = {item.rsplit('.', 1)[-1] for item in functions.keys() if not item.rsplit('.', 1)[-1].startswith(("set", "get"))}
     return function
 
 def get_all_other_function(functions):
@@ -200,6 +202,27 @@ def calculate_sidc1(method_param, method_return) -> Tuple[float, int, int, int]:
 
     return sidc1, len(common_param), len(common_return), total_combinations
 
+def calculate_sidc(method_param) -> Tuple[float, int, int]:
+
+    param_types = set()
+
+    # Menentukan parameter yang muncul lebih dari sekali
+    param_occurrences = defaultdict(int)
+    for key, params in method_param.items():
+        for param in params:
+            param_types.add(param)
+            if param in param_occurrences:
+                param_occurrences[param] += 1
+            else:
+                param_occurrences[param] = 1
+    total_param_types = len(param_types)
+
+    common_params = {ptype for ptype, count in param_occurrences.items() if count > 1}
+
+    # Hitung SIDC
+    sidc = len(common_params) / total_param_types if total_param_types > 0 else 0
+    return sidc, len(common_params), total_param_types # Pembulatan 4 desimal
+
 def clean_empty_keys(dict1, dict2):
     """
     Menghapus key yang memiliki list kosong di kedua dictionary.
@@ -220,10 +243,11 @@ def get_common_pair(list_pair):
     ]
 
 def calculate_siuc(functions, service_operations):
-    clients = get_all_function_call(functions, service_operations)
+    clients = get_all_client_call(functions, service_operations)
+    function = get_all_function_call(functions, service_operations)
 
     # Step 3: Hitung jumlah total pemanggilan metode dalam service
-    total_invoked = sum(len(called_methods) for called_methods in clients.values())
+    total_invoked = sum(len(called_methods) for called_methods in function.values())
 
     # Step 4: Hitung jumlah total klien dan operasi service
     total_clients = len(clients)
@@ -233,7 +257,7 @@ def calculate_siuc(functions, service_operations):
     siuc = total_invoked / (total_clients * total_operations) if total_clients > 0 and total_operations > 0 else 0
     return siuc, total_invoked, total_clients, total_operations
 
-def get_all_function_call(functions, service_operations):
+def get_all_client_call(functions, service_operations):
     clients = defaultdict(set)
     for client, details in functions.items():
         # print(client, details)
@@ -243,14 +267,27 @@ def get_all_function_call(functions, service_operations):
 
     return clients
 
+def get_all_function_call(functions, service_operations):
+    clients = defaultdict(set)
+    for client, details in functions.items():
+        # print(client, details)
+        for call in details["called_methods"]:
+            # if call["method"] in service_operations:
+            clients[client].add(call["method"])
+
+    return clients
+
 def calculate_sisc(functions, service_operations):
     seq_call = get_all_function_seq_call(functions, service_operations)
+    seq_client_call = get_all_client_seq_call(functions, service_operations)
 
     # Step 3: Hitung jumlah total pasangan metode yang dipanggil secara sekuensial
-    seq_connected = sum(len(called_set) for called_set in seq_call.values())
+    # seq_connected = sum(len(called_set) for called_set in seq_call.values())
+    seq_connected = len(seq_call)
 
     # Step 4: Hitung jumlah total kombinasi pasangan metode dalam service
-    total_combinations = len(list(combinations(service_operations, 2)))
+    # total_combinations = len(list(combinations(service_operations, 2)))
+    total_combinations = len(service_operations) * len(seq_client_call)
 
     # Step 5: Hitung SISC menggunakan rumus
     sisc = seq_connected / total_combinations if total_combinations > 0 else 0
@@ -258,12 +295,25 @@ def calculate_sisc(functions, service_operations):
     return sisc, seq_connected, total_combinations
 
 
-def get_all_function_seq_call(functions, service_operations):
+def get_all_client_seq_call(functions, service_operations):
     # Step 2: Identifikasi pemanggilan metode secara berurutan
     sequential_calls = defaultdict(set)  # Dictionary untuk menyimpan sequential calls
 
     for function_name, details in functions.items():
         called_methods = [call["method"] for call in details["called_methods"] if call["method"] in service_operations]
+
+        # Jika ada lebih dari satu metode dipanggil dalam satu function, kita anggap sequential
+        for i in range(len(called_methods) - 1):
+            sequential_calls[called_methods[i]].add(called_methods[i + 1])
+
+    return sequential_calls
+
+def get_all_function_seq_call(functions, service_operations):
+    # Step 2: Identifikasi pemanggilan metode secara berurutan
+    sequential_calls = defaultdict(set)  # Dictionary untuk menyimpan sequential calls
+
+    for function_name, details in functions.items():
+        called_methods = [call["method"] for call in details["called_methods"]]
 
         # Jika ada lebih dari satu metode dipanggil dalam satu function, kita anggap sequential
         for i in range(len(called_methods) - 1):
@@ -279,6 +329,8 @@ def calculate_siic(functions, service_operations, other_service_operations):
     total_operation = len(service_operations)
 
     siic = IC_s / total_operation if total_operation > 0  else 0
+    # if siic > 1 :
+    #     siic = float(1)
     return siic, IC_s, total_operation
 
 def calculate_tics(SIDC, SIUC, SIIC, SISC):
@@ -290,7 +342,8 @@ def get_all_function_shared_call(functions, service_operations, other_service_op
 
     for function_name, details in functions.items():
         if 'called_methods' in details.keys():
-            called_methods = [call["method"] for call in details["called_methods"] if call['method'] in service_operations]
+            called_methods = [call["method"] for call in details["called_methods"]]
+            # called_methods = [call["method"] for call in details["called_methods"] if call['method'] in service_operations]
 
             # Jika ada lebih dari satu metode dipanggil dalam satu function, kita anggap sequential
             for called_method in called_methods:
@@ -315,8 +368,8 @@ def get_func_body(functions):
                 for param in param_type:
                     params.append(param['type'])
 
-        method_signature = f"{func_name}({', '.join([param for param in params])})"
-        method_body = str(func_data)
+        method_signature = f"{func_name}({', '.join([param for param in params if param])})"
+        method_body = str(func_data.values())
         methods.append((method_signature, method_body))
 
     return methods
@@ -418,6 +471,14 @@ def _calculate_lcom(functions):
 def _calculate_lcom4(functions):
     return calculate_lcom4(functions)
 
+def _calculate_acosm(variable_func):
+    method_body = get_func_body(variable_func["functions"])
+    model = train_doc2vec(method_body)
+    sim_matrix, pair_indices = extract_similarity(model, method_body, compute_cosm_cosine)
+
+    acosm = calculate_ACOSM(sim_matrix, pair_indices)
+    return acosm
+
 def _calculate_lcom5(variable_func):
     variables = variable_func["global_vars"]
     # print(variables)
@@ -430,13 +491,13 @@ def _calculate_lcom5(variable_func):
         variable = {k: v for k,v in variables.items() if '.'.join(k.split('.')[:-1]) == class_name}
         function = {k: v for k, v in functions.items() if '.'.join(k.split('.')[:-1]) == class_name}
         lcom5 = calculate_lcom5(variable, function)
-        print(class_name, lcom5)
+        # print(class_name, lcom5)
         if lcom5[0] != float('inf'):
             lcom5_class[class_name] = lcom5[0]
 
-    # print(lcom5_class)
+    # print(len(lcom5_class))
 
-    average_lcom5 = sum(k for k in lcom5_class.values()) / len(lcom5_class)
+    average_lcom5 = sum(k for k in lcom5_class.values()) / len(lcom5_class) if len(lcom5_class) > 0 else 0
     return average_lcom5
 
 
@@ -501,10 +562,15 @@ lang_list = {
     'go': {'lang': 'go', 'extract': go._extract_from_dir, 'parse' : go._parse_tree_content, 'func': go._parse_function_variable}
 }
 
-lang = 'java'
-tree_contents = lang_list[lang]['extract']("./java/rs", lang_list[lang]['parse'], lang)
+# lang = 'java'
+
+# dir_path = "D://DATA//java//intellij//bravo-branch-service//src//main"
+# dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
+# dir_path = "C://Users//ARD//Desktop//robot-shop"
+# dir_path = "./java/rs"
+# tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
-variable_func = lang_list[lang]['func'](tree_contents)
+# variable_func = lang_list[lang]['func'](tree_contents)
 # print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
 # print(json.dumps(variable_func['functions'], indent=2))
@@ -543,13 +609,15 @@ variable_func = lang_list[lang]['func'](tree_contents)
 # all_func_return_type_without_get_set = get_all_func_return_type_without_get_set(variable_func["functions"], all_get_set_func)
 # print(all_func_return_type_without_get_set)
 
-# sidc = calculate_sidc1(all_func_params_type, all_func_return_type)
+# sidc = calculate_sidc(all_func_params_type)
 # print(sidc)
+
+# sidc1 = calculate_sidc1(all_func_params_type, all_func_return_type)
+# print(sidc1)
 
 # service_operations = get_all_function(variable_func["functions"])
 # other_service_operations = get_all_other_function(variable_func['functions'])
 # print(service_operations)
-# print(other_service_operations)
 # siuc = calculate_siuc(variable_func["functions"], service_operations)
 # print(siuc)
 

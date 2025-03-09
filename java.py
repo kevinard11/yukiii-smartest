@@ -61,6 +61,11 @@ def flatten_dict(d, parent_key='', sep='.'):
             items[new_key] = v
     return items
 
+def convert_java_format_to_python(java_format, *args):
+    """Convert Java's String.format syntax to Python .format() syntax"""
+    python_format = re.sub(r'%s', '{}', java_format)
+    return python_format.format(*args)
+
 def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
     # Menyimpan hasil analisis
@@ -95,40 +100,64 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                     # Jika initializer adalah pemanggilan metode
                     if isinstance(declarator.initializer, javalang.tree.MethodInvocation):
                         method_name = declarator.initializer.member
-                        # print(declarator.initializer)
+
                         qualifier = declarator.initializer.qualifier if hasattr(declarator.initializer, 'qualifier') else None
 
                         method_args = []
-                        for arg in declarator.initializer.arguments:
 
-                            if isinstance(arg, javalang.tree.This):
-                                arg = arg.selectors[0]
+                        if method_name == 'format':
+                            args = declarator.initializer.arguments
+                            if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                format_str = args[0].value
 
-                            if isinstance(arg, javalang.tree.ClassReference):
-                                method_args.append(arg.type.name+".class")
-                            elif isinstance(arg, javalang.tree.MemberReference):
-                                method_args.append(arg.member)
-                            elif isinstance(arg, javalang.tree.Literal):
-                                method_args.append(arg.value)
-                            # elif isinstance(arg, javalang.tree.BinaryOperation):
-                            #     method_args(get_BinOp(initializer))
-                            elif isinstance(arg, javalang.tree.MethodInvocation):
-                                method_name2 = arg.member
-                                qualifier2 = arg.qualifier if hasattr(arg, 'qualifier') else None
+                            if format_str:
+                                keywords = []
+                                for arg in args[1:]:
+                                    if isinstance(arg, javalang.tree.Literal):
+                                        keywords.append(arg.value.replace("'",'').replace('"',''))
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        keywords.append(arg.member.replace("'",'').replace('"',''))
+                                    elif isinstance(arg, javalang.tree.MethodInvocation):
+                                        arg1 = arg.arguments
+                                        for arg2 in arg1:
+                                            if isinstance(arg2, javalang.tree.Literal):
+                                                keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                break
 
-                                method_args2 = []
-                                for arg2 in arg.arguments:
-                                    if isinstance(arg2, javalang.tree.ClassReference):
-                                        method_args2.append(arg2.type.name)
-                                    elif isinstance(arg2, javalang.tree.MemberReference):
-                                        method_args2.append(arg2.member)
-                                    elif isinstance(arg2, javalang.tree.Literal):
-                                        method_args2.append(arg2.value)
-                                method_args.append({
-                                    "method": method_name2,
-                                    "arguments": method_args2,
-                                    "qualifier": qualifier2,
-                                })
+                                if keywords:
+                                    format_str = convert_java_format_to_python(format_str, *keywords)
+                                method_args.append(format_str)
+                        else:
+                            for arg in declarator.initializer.arguments:
+
+                                if isinstance(arg, javalang.tree.This):
+                                    arg = arg.selectors[0]
+
+                                if isinstance(arg, javalang.tree.ClassReference):
+                                    method_args.append(arg.type.name+".class")
+                                elif isinstance(arg, javalang.tree.MemberReference):
+                                    method_args.append(arg.member)
+                                elif isinstance(arg, javalang.tree.Literal):
+                                    method_args.append(arg.value)
+                                # elif isinstance(arg, javalang.tree.BinaryOperation):
+                                #     method_args(get_BinOp(initializer))
+                                elif isinstance(arg, javalang.tree.MethodInvocation):
+                                    method_name2 = arg.member
+                                    qualifier2 = arg.qualifier if hasattr(arg, 'qualifier') else None
+
+                                    method_args2 = []
+                                    for arg2 in arg.arguments:
+                                        if isinstance(arg2, javalang.tree.ClassReference):
+                                            method_args2.append(arg2.type.name)
+                                        elif isinstance(arg2, javalang.tree.MemberReference):
+                                            method_args2.append(arg2.member)
+                                        elif isinstance(arg2, javalang.tree.Literal):
+                                            method_args2.append(arg2.value)
+                                    method_args.append({
+                                        "method": method_name2,
+                                        "arguments": method_args2,
+                                        "qualifier": qualifier2,
+                                    })
 
                         global_vars[var_name] = {
                             "method": method_name,
@@ -201,17 +230,40 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                 qualifier = expression.qualifier if hasattr(expression, 'qualifier') else None
                                 # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in expression.arguments]
                                 method_args = []
-                                for arg in expression.arguments:
-                                    if isinstance(arg, javalang.tree.This):
-                                        arg = arg.selectors[0] if arg.selectors else arg
-                                    if isinstance(arg, javalang.tree.ClassReference):
-                                        method_args.append(arg.type.name+".class")
-                                    elif isinstance(arg, javalang.tree.MemberReference):
-                                        method_args.append(arg.member)
-                                    elif isinstance(arg, javalang.tree.Literal):
-                                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                    elif isinstance(arg, javalang.tree.ClassReference):
-                                        method_args.append(f"{arg.type.name}.class")
+                                if method_name == 'format':
+                                    args = expression.arguments
+                                    if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                        format_str = args[0].value
+
+                                    if format_str:
+                                        keywords = []
+                                        for arg in args[1:]:
+                                            if isinstance(arg, javalang.tree.Literal):
+                                                keywords.append(arg.value.replace("'",'').replace('"',''))
+                                            elif isinstance(arg, javalang.tree.MemberReference):
+                                                keywords.append(arg.member.replace("'",'').replace('"',''))
+                                            elif isinstance(arg, javalang.tree.MethodInvocation):
+                                                arg1 = arg.arguments
+                                                for arg2 in arg1:
+                                                    if isinstance(arg2, javalang.tree.Literal):
+                                                        keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                        break
+
+                                        if keywords:
+                                            format_str = convert_java_format_to_python(format_str, *keywords)
+                                        method_args.append(format_str)
+                                else:
+                                    for arg in expression.arguments:
+                                        if isinstance(arg, javalang.tree.This):
+                                            arg = arg.selectors[0] if arg.selectors else arg
+                                        if isinstance(arg, javalang.tree.ClassReference):
+                                            method_args.append(arg.type.name+".class")
+                                        elif isinstance(arg, javalang.tree.MemberReference):
+                                            method_args.append(arg.member)
+                                        elif isinstance(arg, javalang.tree.Literal):
+                                            method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                        elif isinstance(arg, javalang.tree.ClassReference):
+                                            method_args.append(f"{arg.type.name}.class")
 
                                 called_methods.append({
                                     "method": method_name,
@@ -236,19 +288,42 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                     qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                                     # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                                     method_args = []
-                                    for arg in initializer.arguments:
-                                        if isinstance(arg, javalang.tree.This):
-                                            arg = arg.selectors[0]
-                                        if isinstance(arg, javalang.tree.ClassReference):
-                                            method_args.append(arg.type.name+".class")
-                                        elif isinstance(arg, javalang.tree.MemberReference):
-                                            method_args.append(arg.member)
-                                        elif isinstance(arg, javalang.tree.Literal):
-                                            method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                        elif isinstance(arg, javalang.tree.ClassReference):
-                                            method_args.append(f"{arg.type.name}.class")
-                                        else:
-                                            method_args.append(str(arg))
+                                    if method_name == 'format':
+                                        args = initializer.arguments
+                                        if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                            format_str = args[0].value
+
+                                        if format_str:
+                                            keywords = []
+                                            for arg in args[1:]:
+                                                if isinstance(arg, javalang.tree.Literal):
+                                                    keywords.append(arg.value.replace("'",'').replace('"',''))
+                                                elif isinstance(arg, javalang.tree.MemberReference):
+                                                    keywords.append(arg.member.replace("'",'').replace('"',''))
+                                                elif isinstance(arg, javalang.tree.MethodInvocation):
+                                                    arg1 = arg.arguments
+                                                    for arg2 in arg1:
+                                                        if isinstance(arg2, javalang.tree.Literal):
+                                                            keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                            break
+
+                                            if keywords:
+                                                format_str = convert_java_format_to_python(format_str, *keywords)
+                                            method_args.append(format_str)
+                                    else:
+                                        for arg in initializer.arguments:
+                                            if isinstance(arg, javalang.tree.This):
+                                                arg = arg.selectors[0]
+                                            if isinstance(arg, javalang.tree.ClassReference):
+                                                method_args.append(arg.type.name+".class")
+                                            elif isinstance(arg, javalang.tree.MemberReference):
+                                                method_args.append(arg.member)
+                                            elif isinstance(arg, javalang.tree.Literal):
+                                                method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                            elif isinstance(arg, javalang.tree.ClassReference):
+                                                method_args.append(f"{arg.type.name}.class")
+                                            # else:
+                                            #     method_args.append(str(arg))
                                     local_vars[var_name] = {
                                         "method": method_name,
                                         "arguments": method_args
@@ -288,19 +363,42 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                     qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                                     # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                                     method_args = []
-                                    for arg in initializer.arguments:
-                                        if isinstance(arg, javalang.tree.This):
-                                            arg = arg.selectors[0]
-                                        if isinstance(arg, javalang.tree.MemberReference):
-                                            method_args.append(arg.member)
-                                        # elif isinstance(arg, javalang.tree.BinaryOperation):
-                                        #     method_args(get_BinOp(arg))
-                                        elif isinstance(arg, javalang.tree.Literal):
-                                            method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                        elif isinstance(arg, javalang.tree.ClassReference):
-                                            method_args.append(f"{arg.type.name}.class")
-                                        else:
-                                            method_args.append(str(arg))
+                                    if method_name == 'format':
+                                        args = initializer.arguments
+                                        if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                            format_str = args[0].value
+
+                                        if format_str:
+                                            keywords = []
+                                            for arg in args[1:]:
+                                                if isinstance(arg, javalang.tree.Literal):
+                                                    keywords.append(arg.value.replace("'",'').replace('"',''))
+                                                elif isinstance(arg, javalang.tree.MemberReference):
+                                                    keywords.append(arg.member.replace("'",'').replace('"',''))
+                                                elif isinstance(arg, javalang.tree.MethodInvocation):
+                                                    arg1 = arg.arguments
+                                                    for arg2 in arg1:
+                                                        if isinstance(arg2, javalang.tree.Literal):
+                                                            keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                            break
+
+                                            if keywords:
+                                                format_str = convert_java_format_to_python(format_str, *keywords)
+                                            method_args.append(format_str)
+                                    else:
+                                        for arg in initializer.arguments:
+                                            if isinstance(arg, javalang.tree.This):
+                                                arg = arg.selectors[0]
+                                            if isinstance(arg, javalang.tree.MemberReference):
+                                                method_args.append(arg.member)
+                                            # elif isinstance(arg, javalang.tree.BinaryOperation):
+                                            #     method_args(get_BinOp(arg))
+                                            elif isinstance(arg, javalang.tree.Literal):
+                                                method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                            elif isinstance(arg, javalang.tree.ClassReference):
+                                                method_args.append(f"{arg.type.name}.class")
+                                            # else:
+                                            #     method_args.append(str(arg))
 
                                     local_vars[var_name] = {
                                         "method": method_name,
@@ -345,21 +443,44 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                             qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                                             # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                                             method_args = []
-                                            for arg in initializer.arguments:
-                                                if isinstance(arg, javalang.tree.This):
-                                                    arg = arg.selectors[0]
-                                                if isinstance(arg, javalang.tree.ClassReference):
-                                                    method_args.append(arg.type.name+".class")
-                                                elif isinstance(arg, javalang.tree.MemberReference):
-                                                    method_args.append(arg.member)
-                                                # elif isinstance(arg, javalang.tree.BinaryOperation):
-                                                #     method_args(get_BinOp(initializer))
-                                                elif isinstance(arg, javalang.tree.Literal):
-                                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                                elif isinstance(arg, javalang.tree.ClassReference):
-                                                    method_args.append(f"{arg.type.name}.class")
-                                                else:
-                                                    method_args.append(str(arg))
+                                            if method_name == 'format':
+                                                args = initializer.arguments
+                                                if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                                    format_str = args[0].value
+
+                                                if format_str:
+                                                    keywords = []
+                                                    for arg in args[1:]:
+                                                        if isinstance(arg, javalang.tree.Literal):
+                                                            keywords.append(arg.value.replace("'",'').replace('"',''))
+                                                        elif isinstance(arg, javalang.tree.MemberReference):
+                                                            keywords.append(arg.member.replace("'",'').replace('"',''))
+                                                        elif isinstance(arg, javalang.tree.MethodInvocation):
+                                                            arg1 = arg.arguments
+                                                            for arg2 in arg1:
+                                                                if isinstance(arg2, javalang.tree.Literal):
+                                                                    keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                                    break
+
+                                                    if keywords:
+                                                        format_str = convert_java_format_to_python(format_str, *keywords)
+                                                    method_args.append(format_str)
+                                            else:
+                                                for arg in initializer.arguments:
+                                                    if isinstance(arg, javalang.tree.This):
+                                                        arg = arg.selectors[0]
+                                                    if isinstance(arg, javalang.tree.ClassReference):
+                                                        method_args.append(arg.type.name+".class")
+                                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                                        method_args.append(arg.member)
+                                                    # elif isinstance(arg, javalang.tree.BinaryOperation):
+                                                    #     method_args(get_BinOp(initializer))
+                                                    elif isinstance(arg, javalang.tree.Literal):
+                                                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                                    elif isinstance(arg, javalang.tree.ClassReference):
+                                                        method_args.append(f"{arg.type.name}.class")
+                                                    # else:
+                                                    #     method_args.append(str(arg))
                                             local_vars[var_name] = {
                                                 "method": method_name,
                                                 "arguments": method_args
@@ -399,19 +520,42 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
                             # method_args = [arg.value for arg in inner_node.arguments if hasattr(arg, 'value')]
                             method_args = []
-                            for arg in inner_node.arguments:
-                                if isinstance(arg, javalang.tree.ClassReference):
-                                    method_args.append(arg.type.name+".class")
-                                elif isinstance(arg, javalang.tree.MemberReference):
-                                    method_args.append(arg.member)
-                                elif isinstance(arg, javalang.tree.Literal):
-                                    method_args.append(arg.value)
-                                elif isinstance(arg, javalang.tree.ClassReference):
-                                    method_args.append(f"{arg.type.name}.class")
-                                else:
-                                    method_args.append(str(arg))
-                                # elif isinstance(arg, javalang.tree.BinaryOperation):
-                                #     method_args(get_BinOp(initializer))
+                            if method_name == 'format':
+                                args = inner_node.arguments
+                                if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                    format_str = args[0].value
+
+                                if format_str:
+                                    keywords = []
+                                    for arg in args[1:]:
+                                        if isinstance(arg, javalang.tree.Literal):
+                                            keywords.append(arg.value.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MemberReference):
+                                            keywords.append(arg.member.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MethodInvocation):
+                                            arg1 = arg.arguments
+                                            for arg2 in arg1:
+                                                if isinstance(arg2, javalang.tree.Literal):
+                                                    keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                    break
+
+                                    if keywords:
+                                        format_str = convert_java_format_to_python(format_str, *keywords)
+                                    method_args.append(format_str)
+                            else:
+                                for arg in inner_node.arguments:
+                                    if isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(arg.type.name+".class")
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        method_args.append(arg.member)
+                                    elif isinstance(arg, javalang.tree.Literal):
+                                        method_args.append(arg.value)
+                                    elif isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(f"{arg.type.name}.class")
+                                    # else:
+                                    #     method_args.append(str(arg))
+                                    # elif isinstance(arg, javalang.tree.BinaryOperation):
+                                    #     method_args(get_BinOp(initializer))
 
                             if not (method_name, len(method_args), qualifier) in called_set:
                                 called_methods.append({
@@ -441,19 +585,42 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
             qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
             # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
             method_args = []
-            for arg in initializer.arguments:
-                if isinstance(arg, javalang.tree.This):
-                    arg = arg.selectors[0]
-                if isinstance(arg, javalang.tree.MemberReference):
-                    method_args.append(arg.member)
-                elif isinstance(arg, javalang.tree.Literal):
-                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                elif isinstance(arg, javalang.tree.ClassReference):
-                    method_args.append(f"{arg.type.name}.class")
-                else:
-                    method_args.append(str(arg))
-                # elif isinstance(arg, javalang.tree.BinaryOperation):
-                #     method_args(get_BinOp(initializer))
+            if method_name == 'format':
+                args = initializer.arguments
+                if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                    format_str = args[0].value
+
+                if format_str:
+                    keywords = []
+                    for arg in args[1:]:
+                        if isinstance(arg, javalang.tree.Literal):
+                            keywords.append(arg.value.replace("'",'').replace('"',''))
+                        elif isinstance(arg, javalang.tree.MemberReference):
+                            keywords.append(arg.member.replace("'",'').replace('"',''))
+                        elif isinstance(arg, javalang.tree.MethodInvocation):
+                            arg1 = arg.arguments
+                            for arg2 in arg1:
+                                if isinstance(arg2, javalang.tree.Literal):
+                                    keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                    break
+
+                    if keywords:
+                        format_str = convert_java_format_to_python(format_str, *keywords)
+                    method_args.append(format_str)
+            else:
+                for arg in initializer.arguments:
+                    if isinstance(arg, javalang.tree.This):
+                        arg = arg.selectors[0]
+                    if isinstance(arg, javalang.tree.MemberReference):
+                        method_args.append(arg.member)
+                    elif isinstance(arg, javalang.tree.Literal):
+                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                    elif isinstance(arg, javalang.tree.ClassReference):
+                        method_args.append(f"{arg.type.name}.class")
+                    # else:
+                    #     method_args.append(str(arg))
+                    # elif isinstance(arg, javalang.tree.BinaryOperation):
+                    #     method_args(get_BinOp(initializer))
 
             called_methods.append({
                 "method": method_name,
@@ -479,19 +646,43 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                             # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                             method_args = []
-                            for arg in initializer.arguments:
-                                if isinstance(arg, javalang.tree.This):
-                                    arg = arg.selectors[0]
-                                if isinstance(arg, javalang.tree.ClassReference):
-                                    method_args.append(arg.type.name+".class")
-                                elif isinstance(arg, javalang.tree.MemberReference):
-                                    method_args.append(arg.member)
-                                elif isinstance(arg, javalang.tree.Literal):
-                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                else:
-                                    method_args.append(str(arg))
-                                # elif isinstance(arg, javalang.tree.BinaryOperation):
-                                #     method_args(get_BinOp(initializer))
+
+                            if method_name == 'format':
+                                args = initializer.arguments
+                                if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                    format_str = args[0].value
+
+                                if format_str:
+                                    keywords = []
+                                    for arg in args[1:]:
+                                        if isinstance(arg, javalang.tree.Literal):
+                                            keywords.append(arg.value.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MemberReference):
+                                            keywords.append(arg.member.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MethodInvocation):
+                                            arg1 = arg.arguments
+                                            for arg2 in arg1:
+                                                if isinstance(arg2, javalang.tree.Literal):
+                                                    keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                    break
+
+                                    if keywords:
+                                        format_str = convert_java_format_to_python(format_str, *keywords)
+                                    method_args.append(format_str)
+                            else:
+                                for arg in initializer.arguments:
+                                    if isinstance(arg, javalang.tree.This):
+                                        arg = arg.selectors[0]
+                                    if isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(arg.type.name+".class")
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        method_args.append(arg.member)
+                                    elif isinstance(arg, javalang.tree.Literal):
+                                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                    # else:
+                                    #     method_args.append(str(arg))
+                                    # elif isinstance(arg, javalang.tree.BinaryOperation):
+                                    #     method_args(get_BinOp(initializer))
                             local_vars[var_name] = {
                                 "method": method_name,
                                 "arguments": method_args
@@ -529,17 +720,43 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                         qualifier = expression.qualifier if hasattr(expression, 'qualifier') else None
                         # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in expression.arguments]
                         method_args = []
-                        for arg in expression.arguments:
-                            if isinstance(arg, javalang.tree.This):
-                                arg = arg.selectors[0]
-                            if isinstance(arg, javalang.tree.ClassReference):
-                                method_args.append(arg.type.name+".class")
-                            elif isinstance(arg, javalang.tree.MemberReference):
-                                method_args.append(arg.member)
-                            elif isinstance(arg, javalang.tree.Literal):
-                                method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                            else:
-                                method_args.append(str(arg))
+
+                        if method_name == 'format':
+                            args = expression.arguments
+                            if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                format_str = args[0].value
+
+                            if format_str:
+                                keywords = []
+                                for arg in args[1:]:
+                                    if isinstance(arg, javalang.tree.Literal):
+                                        keywords.append(arg.value.replace("'",'').replace('"',''))
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        keywords.append(arg.member.replace("'",'').replace('"',''))
+                                    elif isinstance(arg, javalang.tree.MethodInvocation):
+                                        arg1 = arg.arguments
+                                        for arg2 in arg1:
+                                            if isinstance(arg2, javalang.tree.Literal):
+                                                keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                break
+
+                                if keywords:
+                                    format_str = convert_java_format_to_python(format_str, *keywords)
+                                method_args.append(format_str)
+                        else:
+                            for arg in expression.arguments:
+                                if isinstance(arg, javalang.tree.This):
+                                    arg = arg.selectors[0]
+                                if isinstance(arg, javalang.tree.ClassReference):
+                                    method_args.append(arg.type.name+".class")
+                                elif isinstance(arg, javalang.tree.MemberReference):
+                                    method_args.append(arg.member)
+                                elif isinstance(arg, javalang.tree.BinaryOperation):
+                                    method_args(get_BinOp(initializer))
+                                elif isinstance(arg, javalang.tree.Literal):
+                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                # else:
+                                #     method_args.append(str(arg))
 
                         called_methods.append({
                             "method": method_name,
@@ -564,17 +781,41 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                             # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                             method_args = []
-                            for arg in initializer.arguments:
-                                if isinstance(arg, javalang.tree.This):
-                                    arg = arg.selectors[0]
-                                if isinstance(arg, javalang.tree.ClassReference):
-                                    method_args.append(arg.type.name+".class")
-                                elif isinstance(arg, javalang.tree.MemberReference):
-                                    method_args.append(arg.member)
-                                elif isinstance(arg, javalang.tree.Literal):
-                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                else:
-                                    method_args.append(str(arg))
+
+                            if method_name == 'format':
+                                args = initializer.arguments
+                                if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                    format_str = args[0].value
+
+                                if format_str:
+                                    keywords = []
+                                    for arg in args[1:]:
+                                        if isinstance(arg, javalang.tree.Literal):
+                                            keywords.append(arg.value.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MemberReference):
+                                            keywords.append(arg.member.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MethodInvocation):
+                                            arg1 = arg.arguments
+                                            for arg2 in arg1:
+                                                if isinstance(arg2, javalang.tree.Literal):
+                                                    keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                    break
+
+                                    if keywords:
+                                        format_str = convert_java_format_to_python(format_str, *keywords)
+                                    method_args.append(format_str)
+                            else:
+                                for arg in initializer.arguments:
+                                    if isinstance(arg, javalang.tree.This):
+                                        arg = arg.selectors[0]
+                                    if isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(arg.type.name+".class")
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        method_args.append(arg.member)
+                                    elif isinstance(arg, javalang.tree.Literal):
+                                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                    # else:
+                                    #     method_args.append(str(arg))
                             # local_vars[var_name] = {
                             #     "method": method_name,
                             #     "arguments": method_args
@@ -621,17 +862,40 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                     qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                     # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                     method_args = []
-                    for arg in initializer.arguments:
-                        if isinstance(arg, javalang.tree.This):
-                            arg = arg.selectors[0]
-                        if isinstance(arg, javalang.tree.ClassReference):
-                            method_args.append(arg.type.name+".class")
-                        elif isinstance(arg, javalang.tree.MemberReference):
-                            method_args.append(arg.member)
-                        elif isinstance(arg, javalang.tree.Literal):
-                            method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                        else:
-                            method_args.append(str(arg))
+                    if method_name == 'format':
+                        args = initializer.arguments
+                        if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                            format_str = args[0].value
+
+                        if format_str:
+                            keywords = []
+                            for arg in args[1:]:
+                                if isinstance(arg, javalang.tree.Literal):
+                                    keywords.append(arg.value.replace("'",'').replace('"',''))
+                                elif isinstance(arg, javalang.tree.MemberReference):
+                                    keywords.append(arg.member.replace("'",'').replace('"',''))
+                                elif isinstance(arg, javalang.tree.MethodInvocation):
+                                    arg1 = arg.arguments
+                                    for arg2 in arg1:
+                                        if isinstance(arg2, javalang.tree.Literal):
+                                            keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                            break
+
+                            if keywords:
+                                format_str = convert_java_format_to_python(format_str, *keywords)
+                            method_args.append(format_str)
+                    else:
+                        for arg in initializer.arguments:
+                            if isinstance(arg, javalang.tree.This):
+                                arg = arg.selectors[0]
+                            if isinstance(arg, javalang.tree.ClassReference):
+                                method_args.append(arg.type.name+".class")
+                            elif isinstance(arg, javalang.tree.MemberReference):
+                                method_args.append(arg.member)
+                            elif isinstance(arg, javalang.tree.Literal):
+                                method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                            # else:
+                            #     method_args.append(str(arg))
                     local_vars[var_name] = {
                         "method": method_name,
                         "arguments": method_args
@@ -676,17 +940,40 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                             # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                             method_args = []
-                            for arg in initializer.arguments:
-                                if isinstance(arg, javalang.tree.This):
-                                    arg = arg.selectors[0]
-                                if isinstance(arg, javalang.tree.ClassReference):
-                                    method_args.append(arg.type.name+".class")
-                                elif isinstance(arg, javalang.tree.MemberReference):
-                                    method_args.append(arg.member)
-                                elif isinstance(arg, javalang.tree.Literal):
-                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                else:
-                                    method_args.append(str(arg))
+                            if method_name == 'format':
+                                args = initializer.arguments
+                                if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                    format_str = args[0].value
+
+                                if format_str:
+                                    keywords = []
+                                    for arg in args[1:]:
+                                        if isinstance(arg, javalang.tree.Literal):
+                                            keywords.append(arg.value.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MemberReference):
+                                            keywords.append(arg.member.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MethodInvocation):
+                                            arg1 = arg.arguments
+                                            for arg2 in arg1:
+                                                if isinstance(arg2, javalang.tree.Literal):
+                                                    keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                    break
+
+                                    if keywords:
+                                        format_str = convert_java_format_to_python(format_str, *keywords)
+                                    method_args.append(format_str)
+                            else:
+                                for arg in initializer.arguments:
+                                    if isinstance(arg, javalang.tree.This):
+                                        arg = arg.selectors[0]
+                                    if isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(arg.type.name+".class")
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        method_args.append(arg.member)
+                                    elif isinstance(arg, javalang.tree.Literal):
+                                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                    # else:
+                                    #     method_args.append(str(arg))
                             local_vars[var_name] = {
                                 "method": method_name,
                                 "arguments": method_args
@@ -726,17 +1013,40 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                         qualifier = expression.qualifier if hasattr(expression, 'qualifier') else None
                         # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in expression.arguments]
                         method_args = []
-                        for arg in expression.arguments:
-                            if isinstance(arg, javalang.tree.This):
-                                arg = arg.selectors[0]
-                            if isinstance(arg, javalang.tree.ClassReference):
-                                method_args.append(arg.type.name+".class")
-                            elif isinstance(arg, javalang.tree.MemberReference):
-                                method_args.append(arg.member)
-                            elif isinstance(arg, javalang.tree.Literal):
-                                method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                            else:
-                                method_args.append(str(arg))
+                        if method_name == 'format':
+                            args = expression.arguments
+                            if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                format_str = args[0].value
+
+                            if format_str:
+                                keywords = []
+                                for arg in args[1:]:
+                                    if isinstance(arg, javalang.tree.Literal):
+                                        keywords.append(arg.value.replace("'",'').replace('"',''))
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        keywords.append(arg.member.replace("'",'').replace('"',''))
+                                    elif isinstance(arg, javalang.tree.MethodInvocation):
+                                        arg1 = arg.arguments
+                                        for arg2 in arg1:
+                                            if isinstance(arg2, javalang.tree.Literal):
+                                                keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                break
+
+                                if keywords:
+                                    format_str = convert_java_format_to_python(format_str, *keywords)
+                                method_args.append(format_str)
+                        else:
+                            for arg in expression.arguments:
+                                if isinstance(arg, javalang.tree.This):
+                                    arg = arg.selectors[0]
+                                if isinstance(arg, javalang.tree.ClassReference):
+                                    method_args.append(arg.type.name+".class")
+                                elif isinstance(arg, javalang.tree.MemberReference):
+                                    method_args.append(arg.member)
+                                elif isinstance(arg, javalang.tree.Literal):
+                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                else:
+                                    method_args.append(str(arg))
 
                         called_methods.append({
                             "method": method_name,
@@ -762,17 +1072,40 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             qualifier = initializer.qualifier if hasattr(initializer, 'qualifier') else None
                             # method_args = [str(arg.value if hasattr(arg, 'value') else arg) for arg in initializer.arguments]
                             method_args = []
-                            for arg in initializer.arguments:
-                                if isinstance(arg, javalang.tree.This):
-                                    arg = arg.selectors[0]
-                                if isinstance(arg, javalang.tree.ClassReference):
-                                    method_args.append(arg.type.name+".class")
-                                elif isinstance(arg, javalang.tree.MemberReference):
-                                    method_args.append(arg.member)
-                                elif isinstance(arg, javalang.tree.Literal):
-                                    method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
-                                else:
-                                    method_args.append(str(arg))
+                            if method_name == 'format':
+                                args = initializer.arguments
+                                if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
+                                    format_str = args[0].value
+
+                                if format_str:
+                                    keywords = []
+                                    for arg in args[1:]:
+                                        if isinstance(arg, javalang.tree.Literal):
+                                            keywords.append(arg.value.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MemberReference):
+                                            keywords.append(arg.member.replace("'",'').replace('"',''))
+                                        elif isinstance(arg, javalang.tree.MethodInvocation):
+                                            arg1 = arg.arguments
+                                            for arg2 in arg1:
+                                                if isinstance(arg2, javalang.tree.Literal):
+                                                    keywords.append(arg2.value.replace("'",'').replace('"',''))
+                                                    break
+
+                                    if keywords:
+                                        format_str = convert_java_format_to_python(format_str, *keywords)
+                                    method_args.append(format_str)
+                            else:
+                                for arg in initializer.arguments:
+                                    if isinstance(arg, javalang.tree.This):
+                                        arg = arg.selectors[0]
+                                    if isinstance(arg, javalang.tree.ClassReference):
+                                        method_args.append(arg.type.name+".class")
+                                    elif isinstance(arg, javalang.tree.MemberReference):
+                                        method_args.append(arg.member)
+                                    elif isinstance(arg, javalang.tree.Literal):
+                                        method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
+                                    else:
+                                        method_args.append(str(arg))
                             local_vars[var_name] = {
                                 "method": method_name,
                                 "arguments": method_args
@@ -812,7 +1145,7 @@ def get_BinOp(expression):
             return str(expression.value)
         return "UNKNOWN"
 
-# tree_contents = _extract_from_dir("./java/test", _parse_tree_content, "java")
+# tree_contents = _extract_from_dir("./java/rs", _parse_tree_content, "java")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))

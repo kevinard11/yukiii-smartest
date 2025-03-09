@@ -4,28 +4,28 @@ import com.bfi.bravo.client.master.MasterClient;
 
 class Gost {
 
-    private int why;
+    // private int why;
     // private String knapa;
     // private static final Logger logger = LoggerFactory.getLogger(Controller.class);
-    private UserService userService;
+    // private UserService userService;
 
-    @Value("${microservice.confins.url}")
-    private String testUrl;
+    // @Value("${microservice.confins.url}")
+    // private String testUrl;
 
-    @Autowired
-    private MasterClient masterClient;
+    // @Autowired
+    // private MasterClient masterClient;
 
-    @Autowired
-    private ConfinsClient confinsClient;
+    // @Autowired
+    // private ConfinsClient confinsClient;
 
-    @Autowired
-    private WebClient webClient;
+    // @Autowired
+    // private WebClient webClient;
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+    // @Autowired
+    // private RabbitTemplate rabbitTemplate;
 
-    @Autowirde
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    // @Autowirde
+    // private final KafkaTemplate<String, String> kafkaTemplate;
     // public int getWhy() {
     //     return this.why;
     // }
@@ -38,15 +38,15 @@ class Gost {
     //     return this.knapa;
     // }
 
-    public void setKnapa(String knapa) {
-        sendMessagees("ssssss", "sss");
+    // public void setKnapa(String knapa) {
+    //     sendMessagees("ssssss", "sss");
 
-    }
+    // }
 
-    public void sendMessagees(String topic, String message) {
-        kafkaTemplate.send(topic, message);
-        System.out.println("Message sent: " + message);
-    }
+    // public void sendMessagees(String topic, String message) {
+    //     kafkaTemplate.send(topic, message);
+    //     System.out.println("Message sent: " + message);
+    // }
 
     // public void foo() {
     //     String[] arg1 = {"a", "b"};
@@ -63,26 +63,26 @@ class Gost {
     //     foo();
     // }
 
-    public void baz() {
-        sendMessage(queue, "asd");
-        sendMessage("rabbitMqQueuePayment", "sss");
-    }
+    // public void baz() {
+    //     sendMessage(queue, "asd");
+    //     sendMessage("rabbitMqQueuePayment", "sss");
+    // }
 
-    String url = "http://ldalda/order";
-    String queue = "rabbitMqQueue";
+    // String url = "http://ldalda/order";
+    // String queue = "rabbitMqQueue";
 
-    public void sendMessage(String queue, String message) {
-        rabbitTemplate.convertAndSend(queue, message);
-        System.out.println("Message sent: " + message);
-    }
+    // public void sendMessage(String queue, String message) {
+    //     rabbitTemplate.convertAndSend(queue, message);
+    //     System.out.println("Message sent: " + message);
+    // }
 
-    private void printGo(String test, String dooododoasdas) {
-        masterClient.getSubDistrictList(test);
-        masterClient.getSubDistrictListByZipCode(dooododoasdas);
-       confinsClient.generateAgreementNumber(dooododoasdas, null);
-       RestTemplate restTemplate = new RestTemplate();
-       String response = restTemplate.getForObject(testUrl, String.class);
-    }
+    // private void printGo(String test, String dooododoasdas) {
+    //     masterClient.getSubDistrictList(test);
+    //     masterClient.getSubDistrictListByZipCode(dooododoasdas);
+    //    confinsClient.generateAgreementNumber(dooododoasdas, null);
+    //    RestTemplate restTemplate = new RestTemplate();
+    //    String response = restTemplate.getForObject(testUrl, String.class);
+    // }
 
     // public void main(String[] args) {
     //     HttpClient httpClient = HttpClient.newHttpClient();
@@ -95,13 +95,13 @@ class Gost {
     //     HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     // }
 
-    public String findasd(int d, String[] dsda) {
-        HttpResponse<String> response = Unirest.post(testUrl)
-        .field("username", "john_doe")
-        .field("file", new File("path/to/file.txt"))
-        .asString();
-        return response.body();
-    }
+    // public String findasd(int d, String[] dsda) {
+    //     HttpResponse<String> response = Unirest.post(testUrl)
+    //     .field("username", "john_doe")
+    //     .field("file", new File("path/to/file.txt"))
+    //     .asString();
+    //     return response.body();
+    // }
 
     // public int findasde(int b) {
     //     return b;
@@ -135,9 +135,19 @@ class Gost {
     //         process(forVar);
     //     }
     // }
+    // String queue = "CART_ENDPOINT";
+    private String CART_URL = String.format("http://%s/shipping/", getenv("CART_ENDPOINT"));
+    // private String CART_URL = String.format("http://%s/shipping/", queue);
 
+    private String getenv(String key, String def) {
+        String val = System.getenv(key);
+        val = val == null ? def : val;
+
+        return val;
+    }
 
 }
 
 // To compile:
 //     rm example.class ; javac example.java ; ls -l example.java example.class ; java example
+

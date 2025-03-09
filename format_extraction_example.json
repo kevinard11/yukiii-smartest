@@ -2,11 +2,68 @@
     "global_vars": {
         "java.test.Gost.why": null,
         "java.test.Gost.logger": {
-        "method": "getLogger",
-        "arguments": [
-            "Controller.class"
-        ],
-        "qualifier": "LoggerFactory"
+            "method": "getLogger",
+            "arguments": [
+                "Controller.class"
+            ],
+            "qualifier": "LoggerFactory"
+        },
+        "java.test.Gost.UserService":"asd"
+    },
+    "functions": {
+        "java.test.Gost.getWhy": {
+            "local_vars": {
+                "Return": [
+                    {
+                        "type": "int"
+                    }
+                ],
+                "Parameter": [
+                    {
+                        "name": "why",
+                        "type": "int"
+                    }
+                ],
+                "arg1": [
+                    "\"a\"",
+                    "\"b\""
+                ]
+            },
+            "called_methods": [
+                {
+                    "method": "bar",
+                    "arguments": [
+                        "arg1",
+                        "CART_URL"
+                    ],
+                    "qualifier": "userService"
+                },
+                {
+                    "method": "printGo",
+                    "arguments": [
+                        "\"knapa\"",
+                        "\"knapa\""
+                    ],
+                    "qualifier": null,
+                    "assigned_to": "a2"
+                }
+            ]
+        }
+    }
+}
+
+part selanjutny adalah Format variabel yang telah diekstrak. AST yang didapat dalam struktur pohon, struktur ini kemudian dikonversi ke dalam format JSON yang telah ditentukan, sehingga memungkinkan analisis lebih lanjut. Proses ini memungkinkan ekstraksi detail seperti deklarasi variabel, pemanggilan fungsi, serta dependensi antar modul, yang menjadi dasar dalam mengevaluasi kualitas arsitektur mikroservis secara sistematis.
+Terdiri dari 2 part besar yaitu global variable yaitu variable yang dideklarasikan diluar fungsi dan dapat diakses oleh berbagai kelas (public). Global variable disimpan dengan menyimpan path serta nama file, lalu valuenya juga disimpan apabila valuenya string, integer, boolean atau value lain yang nilainya langsung terlihat maka akan langsung disimpan sebagai value, apabila valuenya adalah pemanggilan fungsi akan disimpan dengan menyimpan nama method, param yang dipanggil dan qualifiernya (import libnya).
+Lalu part kedua adalah Function yang dideklarasikan. Terdiri dari 2 part besar juga untuk isi Function, yaitu local_vars dan called_method. local_vars, menyimpan semua variable yang dideklarasikan dalam function tersebut sama seperti pada global_vars, jika variable berisikan fungsi, maka penyimpanannya juga sama begitupun apabila string, integer, dll. Untuk parameter dari fungsi disimpan dalam local_vars juga dengan key 'Parameter' yang berisi list. List tersebut berisi dict yang berisi type param dan nama paramnya. Untuk return dari fungsi disimpan dalam local_vars dengan key 'Return' yang berisi list. List tersebut berisi dict yang hanya berisi type return. Part besar ke 2 dalam function yaitu called_method, adalah semua fungsi yang diapnggil di dalam fungsi. Sama sperti pada global vars, disimpan method name, parameter/keyword, qualifier. Contoh JSONnya adalah
+{
+    "global_vars": {
+        "java.test.Gost.why": null,
+        "java.test.Gost.logger": {
+            "method": "getLogger",
+            "arguments": [
+                "Controller.class"
+            ],
+            "qualifier": "LoggerFactory"
         },
         "java.test.Gost.UserService":"asd"
     },

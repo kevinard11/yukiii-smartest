@@ -1,0 +1,25 @@
+name: robot-shop
+root_dir: robot-shop/
+
+services:
+  cart:
+    dir: cart/
+    lang: js
+  catalog:
+    dir: catalogue/
+    lang: js
+  dispatch:
+    dir: dispatch/
+    lang: go
+  payment:
+    dir: payment/
+    lang: py
+  ratings:
+    dir: ratings/
+    lang: php
+  shipping:
+    dir: shipping/
+    lang: java
+  user:
+    dir: user/
+    lang: js

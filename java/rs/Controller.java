@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
 public class Controller {
     private static final Logger logger = LoggerFactory.getLogger(Controller.class);
 
-    private String CART_URL = String.format("http://%s/shipping/", getenv("CART_ENDPOINT", test), getenv("ADASDASD", "sss"));
+    private String CART_URL = String.format("http://%s/shipping/", getenv("CART_ENDPOINT"));
 
     public static List bytesGlobal = Collections.synchronizedList(new ArrayList<byte[]>());
 
