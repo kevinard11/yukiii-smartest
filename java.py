@@ -6,6 +6,7 @@ from typing import Dict, Tuple
 
 def _extract_from_dir(dir_path, parser, lang) -> dict:
     contents = {}
+    loc = 0
     for dirpath, _, filenames in os.walk(dir_path):
         for filename in filenames:
             if filename.endswith(f".{lang}"):
@@ -19,13 +20,69 @@ def _extract_from_dir(dir_path, parser, lang) -> dict:
                         key = file_path
 
                     contents[key] = file_content
+
+                total_loc, effective_loc = count_lines_of_code(file_path)
+                loc = loc + effective_loc
+
             elif 'application' in filename and filename.endswith(".yaml"):
                 file_path = os.path.join(dirpath, filename)
                 file_content = _parse_content_yaml(file_path)
 
                 contents[file_path.replace('./','').replace('/','.').replace('\\', '.')] = file_content
 
+    contents['loc'] = loc
+
     return contents
+
+def count_lines_of_code(file_path):
+    """Menghitung jumlah baris kode dalam file berdasarkan jenis bahasa"""
+    _, ext = os.path.splitext(file_path)
+    ext = ext.lower()
+
+    # Aturan komentar berdasarkan bahasa
+    comment_markers = {
+        ".java": ("//", "/*", "*/"),
+        ".py": ("#", "'''", "'''"),
+        ".php": ("//", "/*", "*/", "#"),
+        ".js": ("//", "/*", "*/"),
+        ".go": ("//", "/*", "*/")
+    }
+
+    single_comment, block_start, block_end = comment_markers.get(ext, (None, None, None))
+
+    with open(file_path, "r", encoding="utf-8") as file:
+        lines = file.readlines()
+
+    total_loc = len(lines)
+    effective_loc = 0
+    in_block_comment = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Abaikan baris kosong
+        if not stripped:
+            continue
+
+        # Cek awal atau akhir blok komentar
+        if block_start and stripped.startswith(block_start):
+            in_block_comment = True
+        if block_end and stripped.endswith(block_end):
+            in_block_comment = False
+            continue  # Lewati baris ini
+
+        # Lewati jika sedang dalam blok komentar
+        if in_block_comment:
+            continue
+
+        # Abaikan komentar satu baris
+        if single_comment and stripped.startswith(single_comment):
+            continue
+
+        # Tambahkan hanya jika baris ini adalah baris kode
+        effective_loc += 1
+
+    return total_loc, effective_loc
 
 def _parse_content(file_path) -> any:
     with open(file_path, "r") as f:
@@ -74,6 +131,8 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
     # Mendapatkan variabel global (field)
     for key, tree in tree_contents.items():
+        if key == 'loc':
+            continue
 
         if 'application' in key and isinstance(tree, dict):
             items = flatten_dict(tree)

@@ -40,38 +40,25 @@ class Microservice:
         self.tree_contents = self.extract_from_dir(self.dir_path, self.parser_tree, self.lang)
         self.variable_func = self.parse_function_variable(self.tree_contents)
 
-    def extract_from_dir(self, dir_paths, parser, lang) -> dict:
-        contents = {}
-        for dir_path in dir_paths:
-            for dirpath, _, filenames in os.walk(dir_path):
-                for filename in filenames:
-                    if filename.endswith(f".{lang}"):
-                        file_path = os.path.join(dirpath, filename)
-                        file_content = parser(file_path)
-                        package = dirpath.replace('./','').replace('/','.').replace('\\', '.')
-
-                        if package:
-                            key = package + "." + filename.replace(f".{lang}", "")
-                        else:
-                            key = file_path
-
-                        contents[key] = file_content
-            return contents
-
     def set_parse_lang(self):
         if self.lang == 'java':
+            self.extract_from_dir = java._extract_from_dir
             self.parser_tree = java._parse_tree_content
             self.parse_function_variable = java._parse_function_variable
         elif self.lang == 'py':
+            self.extract_from_dir = py._extract_from_dir
             self.parser_tree = py._parse_tree_content
             self.parse_function_variable = py._parse_function_variable
         elif self.lang == 'js':
+            self.extract_from_dir = js._extract_from_dir
             self.parser_tree = js._parse_tree_content
             self.parse_function_variable = js._parse_function_variable
         elif self.lang == 'php':
+            self.extract_from_dir = php._extract_from_dir
             self.parser_tree = php._parse_tree_content
             self.parse_function_variable = php._parse_function_variable
         elif self.lang == 'go':
+            self.extract_from_dir = go._extract_from_dir
             self.parser_tree = go._parse_tree_content
             self.parse_function_variable = go._parse_function_variable
 

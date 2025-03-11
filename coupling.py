@@ -1,7 +1,4 @@
-import re
-import os
 import java, py, js, php, go
-import json
 
 def get_all_feign_client_function(functions):
     feign_funcs = {}

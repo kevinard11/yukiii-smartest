@@ -1,8 +1,5 @@
-import javalang
 import networkx as nx
-import os
 import java, py, js, php, go
-import json
 
 from collections import defaultdict
 from itertools import combinations
