@@ -1,4 +1,4 @@
-package com.bfi.bravo.client.confins;
+package java.test;
 
 import com.bfi.bravo.constant.SecurityConstants;
 import com.bfi.bravo.dto.confins.AgentIncentiveAPIRequest;

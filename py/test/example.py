@@ -202,5 +202,14 @@ def test(s):
 # # Close the producer
 # producer.close()
 
+# Prometheus
+@app.route('/metrics', methods=['POST'])
+def metrics():
+    res = []
+    for m in PromMetrics.values():
+        res.append(prometheus_client.generate_latest(m))
+
+    return Response(res, mimetype='text/plain')
+
 
 

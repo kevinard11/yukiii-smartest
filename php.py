@@ -147,7 +147,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
     for key, tree in tree_contents.items():
         if key == 'loc':
             continue
-        
+
         function = get_functions(tree.root_node, global_vars, key)
         # print(function)
         function1 = get_class_functions(tree.root_node, global_vars, key)
@@ -348,8 +348,23 @@ def get_class_functions(node, global_vars, scope):
                             called_methods = []
                             full_function_name = scope
                             not_get_return = True
+                            # print(child1.children.index(child2))
+
+                            prev_sibling_index = child1.children.index(child2) - 1
+                            if prev_sibling_index >= 0:
+                                prev_sibling = child1.children[prev_sibling_index]
+                                doc_comment = None
+                                if prev_sibling.type == "comment":
+                                    doc_comment = prev_sibling.text.decode()
+
+                                if doc_comment:
+                                    match = re.search(r'@Route\(\s*(?:path\s*=\s*)?"([^"]+)"\s*,?\s*methods\s*=\s*\{\s*([^\}]+)\s*\}\s*\)', doc_comment)
+                                    # print(doc_comment, match, full_function_name)
+                                    if match:
+                                        path = match.group(1)
+                                        methods = [m.strip('"') for m in match.group(2).split(",")]
+                                        local_vars['Http_method'] = methods[0].replace('"','').replace("'",'').lower() if methods else None
                             for child3 in child2.children:
-                                # print(child3)
                                 if child3.type == 'name':
                                     full_function_name = f'{full_function_name}.{child3.text.decode()}'
 
@@ -684,7 +699,7 @@ def get_return_type(node, local_vars, global_vars, type=''):
 
 PHP_LANGUAGE = Language('build/my-languages.so', 'php')
 
-# tree_contents = _extract_from_dir("./php/rs", _parse_tree_content, "php")
+# tree_contents = _extract_from_dir("./php/test", _parse_tree_content, "php")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func['global_vars'], indent=2))

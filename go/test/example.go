@@ -17,7 +17,7 @@ import (
 // var globalList [2]string
 // var globalArr = []int{1, 2, 3}
 // var globalMap = map[string]int{"a": bar(), "b": 20}
-var rabbitReady = 2
+// var rabbitReady = 2
 
 // var (
 // 	amqpUri          string = "12"
@@ -193,12 +193,12 @@ var rabbitReady = 2
 // 	fmt.Println(" [x] Sent:", body)
 // }
 
-func main() {
-	writer := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:  []string{"localhost:9092"},
-		Topic:    "master_queue",
-		Balancer: &kafka.LeastBytes{},
-	})
+// func main() {
+// 	writer := kafka.NewWriter(kafka.WriterConfig{
+// 		Brokers:  []string{"localhost:9092"},
+// 		Topic:    "master_queue",
+// 		Balancer: &kafka.LeastBytes{},
+// 	})
 
 	// err := writer.WriteMessages(context.Background(), kafka.Message{
 	// 	Key:   []byte("Key"),
@@ -210,6 +210,24 @@ func main() {
 
 	// fmt.Println(" [x] Sent: Hello, Kafka!")
 	// writer.Close()
+// }
+
+
+func (app Application) Routes() http.Handler {
+	var router = httprouter.New()
+	secure := alice.New(app.checkToken)
+
+	router.HandlerFunc(http.MethodPost, "/v1/auth/signin", app.SignIn)
+
+	router.HandlerFunc(http.MethodGet, "/v1/movies", app.getAllMovies)
+	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", app.getOneMovies)
+	// router.HandlerFunc(http.MethodGet, "/v1/admin/status", app.statusHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/admin/movies", app.createMovie)
+	router.HandlerFunc(http.MethodPut, "/v1/admin/movies/:id", app.editMovie)
+
+	router.GET("/v1/admin/status", app.wrapMiddleware(secure.ThenFunc(app.statusHandler)))
+
+	return app.enableCORS(router)
 }
 
 

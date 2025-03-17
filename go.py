@@ -395,14 +395,20 @@ def get_functions(head_node, scope):
             params = []
 
             for child in node.children:
+                # print(child.type)
 
                 if child.type == 'parameter_list':
                     if full_func_name == '':
                         for child1 in child.children:
                             if child1.type == 'parameter_declaration':
                                 for child2 in child1.children:
+                                    # print(child2.text.decode())
                                     if child2.type == 'type_identifier':
                                         full_func_name = f"{scope}.{child2.text.decode()}"
+                                        break
+                                    elif child2.type == 'pointer_type':
+                                        full_func_name = f"{scope}.{child2.text.decode()}"
+                                        break
                     elif len(params) == 0 and len(full_func_name) > 0:
                         for child1 in child.children:
                             if child1.type == 'parameter_declaration':
@@ -450,6 +456,8 @@ def get_functions(head_node, scope):
                                     'type': child.text.decode()
                                 })
                     # print(child.children)
+                elif child.type == 'block':
+                    get_blocks(child, local_vars, called_methods, full_func_name)
 
                 local_vars['Return'] = return_type
 
@@ -517,7 +525,7 @@ def get_ifelse_while_for(node, local_vars, called_methods, full_func_name):
 
 GO_LANGUAGE = Language('build/my-languages.so', 'go')
 
-# tree_contents = _extract_from_dir("./go/rs", _parse_tree_content, "go")
+# tree_contents = _extract_from_dir("./go/test", _parse_tree_content, "go")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))

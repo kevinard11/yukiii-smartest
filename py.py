@@ -141,6 +141,10 @@ class GlobalVariableVisitor(ast.NodeVisitor):
 
         local_vars['Parameter'] = params
 
+        route_info = self.visit_route(node)
+        if route_info and 'methods' in route_info:
+            local_vars['Http_method'] = route_info['methods']
+
         # return_type = self.get_annotation(node.returns)  # Ambil tipe return jika ada
         # return_values = self.get_return_values(node)  # Ambil return values dalam fungsi
         path = f"{self.current_def}.{self.current_function}" if self.current_def else self.current_function
@@ -156,6 +160,30 @@ class GlobalVariableVisitor(ast.NodeVisitor):
             self.global_func[path]['local_vars']['Return'] = return_type
 
         self.current_function = None
+
+    def visit_route(self, node):
+        for decorator in node.decorator_list:
+            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                if decorator.func.attr == "route":
+                    route_info = {
+                        "path": None,
+                        "methods": None
+                    }
+
+                    # Ambil argumen pertama sebagai path
+                    # if decorator.args:
+                        # for arg in decorator.args:
+                        # route_info["path"] = ast.unparse(decorator.args[0])
+
+                    # Ambil metode jika didefinisikan dalam keyword arguments
+                    for kw in decorator.keywords:
+                        if kw.arg == "methods":
+                            methods = self.get_value(kw.value)
+                            if isinstance(methods, list):
+                                route_info["methods"] = methods[0].replace("'",'').replace('"','').lower()
+
+                    # Simpan hasil dengan nama fungsi sebagai key
+                    return route_info
 
     def visit_AsyncFunctionDef(self, node):
         """Extract variables from async functions"""
@@ -798,6 +826,11 @@ class FunctionCallVisitor(ast.NodeVisitor):
                 param_type = "Unknown Type"  # Python AST tidak menyimpan tipe
                 parameters.append({"name": param_name, "type": param_type})
 
+            route_info = self.visit_route(node)
+            http_method = ''
+            if route_info and 'methods' in route_info:
+                http_method = route_info['methods']
+
             # Ekstrak variabel lokal
             local_vars = {}
             called_methods = []
@@ -819,11 +852,35 @@ class FunctionCallVisitor(ast.NodeVisitor):
 
             # Simpan hasil analisis function
             self.functions[func_path] = {
-                "local_vars": {"Parameter": parameters, **local_vars},
+                "local_vars": {"Parameter": parameters, "Http_method": http_method, **local_vars},
                 "called_method": called_methods
             }
 
         self.generic_visit(node)
+
+    def visit_route(self, node):
+        for decorator in node.decorator_list:
+            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                if decorator.func.attr == "route":
+                    route_info = {
+                        "path": None,
+                        "methods": None
+                    }
+
+                    # Ambil argumen pertama sebagai path
+                    # if decorator.args:
+                        # for arg in decorator.args:
+                        # route_info["path"] = ast.unparse(decorator.args[0])
+
+                    # Ambil metode jika didefinisikan dalam keyword arguments
+                    for kw in decorator.keywords:
+                        if kw.arg == "methods":
+                            methods = self.get_value(kw.value)
+                            if isinstance(methods, list):
+                                route_info["methods"] = methods[0].replace("'",'').replace('"','').lower()
+
+                    # Simpan hasil dengan nama fungsi sebagai key
+                    return route_info
 
     def visit_AsyncFunctionDef(self, node):
         """Extract variables from async functions"""
@@ -1017,13 +1074,13 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
     # Menyimpan hasil analisis
     functions = {}
     global_vars = {}
-
-    global_visitor = GlobalVariableVisitor()
-    function_call_visitor = FunctionCallVisitor()
     for key, tree in tree_contents.items():
+        # print(key, tree)
         if key == 'loc':
             continue
-        
+
+        global_visitor = GlobalVariableVisitor()
+        function_call_visitor = FunctionCallVisitor()
         global_visitor.visit(tree)
         function_call_visitor.visit(tree)
 

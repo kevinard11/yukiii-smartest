@@ -123,6 +123,55 @@ def convert_java_format_to_python(java_format, *args):
     python_format = re.sub(r'%s', '{}', java_format)
     return python_format.format(*args)
 
+def get_operand_and_operator(tree):
+    operators = {}
+    operands = {}
+
+    for path, node in tree:
+        if isinstance(node, javalang.tree.BinaryOperation):
+            # Tambahkan operator biner
+            if node.operator in operators.keys():
+                operators[node.operator] += 1
+            else:
+                operators[node.operator] = 1  # Hitung total operator
+
+        elif isinstance(node, javalang.tree.Assignment):
+            # Tambahkan operator assignment
+            if node.type in operators.keys():
+                operators[node.type] += 1
+            else:
+                operators[node.type] = 1  # Hitung total operator
+
+        elif isinstance(node, javalang.tree.MethodInvocation):
+            # Tambahkan nama method sebagai operan
+            if node.member in operands.keys():
+                operands[node.member] += 1
+            else:
+                operands[node.member] = 1  # Hitung total operator
+
+        elif isinstance(node, javalang.tree.Literal):
+            # Tambahkan literal sebagai operan
+            if node.value in operands.keys():
+                operands[node.value] += 1
+            else:
+                operands[node.value] = 1  # Hitung total operator
+
+        elif isinstance(node, javalang.tree.MemberReference):
+            # Tambahkan variabel sebagai operan
+            if node.member in operands.keys():
+                operands[node.member] += 1
+            else:
+                operands[node.member] = 1  # Hitung total operator
+
+        elif isinstance(node, javalang.tree.VariableDeclarator):
+            # Tambahkan deklarasi variabel sebagai operan
+            if node.name in operands.keys():
+                operands[node.name] += 1
+            else:
+                operands[node.name] = 1  # Hitung total operator
+
+    return operands, operators
+
 def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
     # Menyimpan hasil analisis
@@ -131,13 +180,14 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
     # Mendapatkan variabel global (field)
     for key, tree in tree_contents.items():
+
         if key == 'loc':
             continue
 
         if 'application' in key and isinstance(tree, dict):
             items = flatten_dict(tree)
             for name, item in items.items():
-                global_vars[key + "."+ name] = item
+                global_vars[key +"."+ name] = item
 
         elif isinstance(tree, javalang.tree.CompilationUnit):
             for path, node in tree.filter(javalang.tree.InterfaceDeclaration):
@@ -251,6 +301,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
             # Mendapatkan daftar fungsi beserta variabel lokal
             for path, node in tree.filter(javalang.tree.MethodDeclaration):
                 func_name = key+"."+node.name
+                # print(func_name, node)
                 local_vars = {}
                 called_methods = []
                 called_set = set()
@@ -271,6 +322,24 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                     local_vars["Return"] = [{
                         "type": node.return_type.name
                     }]
+
+                if node.annotations:
+                    for annotation in node.annotations:
+                        if (annotation.name == 'RequestMapping'):
+                            if annotation.element:
+                                for element in annotation.element:
+                                    if isinstance(element, javalang.tree.ElementValuePair) and element.name == 'method':
+                                        if (isinstance(element.value, javalang.tree.MemberReference)) and element.value.qualifier == 'RequestMethod':
+                                            local_vars['Http_method'] = element.value.member.lower()
+                        elif (annotation.name == 'GetMapping'):
+                            local_vars['Http_method'] = 'get'
+                        elif (annotation.name == 'PostMapping'):
+                            local_vars['Http_method'] = 'post'
+                        elif (annotation.name == 'PutMapping'):
+                            local_vars['Http_method'] = 'put'
+                        elif (annotation.name == 'DeleteMapping'):
+                            local_vars['Http_method'] = 'delete'
+
 
                 # Cari variabel lokal dalam body fungsi
                 if node.body:
@@ -629,6 +698,16 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                     'local_vars': local_vars,
                     'called_methods': called_methods
                 }
+
+        for path, node in tree:
+            if isinstance(node, javalang.tree.MethodDeclaration):
+                operands, operators = get_operand_and_operator(node)
+                functions[key+"."+node.name].update({
+                    "operands": operands,
+                    "operators": operators
+                })
+
+        # get_operand_and_operator(node, functions, func_name)
     variable_func = {
         'global_vars': global_vars,
         'functions': functions
@@ -1204,7 +1283,7 @@ def get_BinOp(expression):
             return str(expression.value)
         return "UNKNOWN"
 
-# tree_contents = _extract_from_dir("./java/rs", _parse_tree_content, "java")
+# tree_contents = _extract_from_dir("./java/test", _parse_tree_content, "java")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))

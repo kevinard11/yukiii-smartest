@@ -1,4 +1,4 @@
-package com.bfi.bravo.client.master;
+package java.test;
 
 import com.bfi.bravo.dto.master.AddressSearchResponse;
 import com.bfi.bravo.dto.master.SubDistrictResponse;
