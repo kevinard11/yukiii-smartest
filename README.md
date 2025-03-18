@@ -2,9 +2,13 @@
 
 ## Version
 
-- 0.0.1 : parse java file, parse py file, cohesion metrix
-- 0.0.2 : parse all file, cohesion metrix (LCOM5), main program
-- 0.0.3 : coupling metrix (AIS) for java
+- 0.0.1 : parse java file, parse py file, cohesion metric
+- 0.0.2 : parse all file, cohesion metric (LCOM5), main program
+- 0.0.3 : coupling metric (AIS) for java
+- 0.0.4 : all coupling metric
+- 0.0.5 : all granularity metric
+- 0.0.6 : all complexity metric
+- 0.0.7 : reorganize file and folder
 
 ## Setup
 
@@ -19,34 +23,12 @@ pip install -r ./requirement.txt
 ```bash
 python ./setup-lib.py
 ```
+## Config
+Create config file in the source repository that want to be analyze. Description will be given in the next version.
 
 ## Run
 
-- parse java file
-
-```bash
-python ./java.py
-```
-
-- parse py file
-
-```bash
-python ./py.py
-```
-
-- calculate cohesion
-
-create microservice manually (command/uncommand)
-
-```bash
-mss.create_microservice('payment', 'go', ["C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//payment"])
-mss.create_microservice('dispatch','py')
-mss.create_microservice('cart', 'java')
-mss.create_microservice('shipment', 'php', ["C://Users//ARD//Desktop//robot-shop"])
-mss.create_microservice('user', 'js', ["C://Users//ARD//Desktop//robot-shop"])
-```
-
-then
+- calculate metric
 
 ```bash
 python ./main.py
