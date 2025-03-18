@@ -14,7 +14,7 @@
 pip install -r ./requirement.txt
 ```
 
-- install lib ast
+- install lib ast (tree-sitter)
 
 ```bash
 python ./setup-lib.py
