@@ -1,0 +1,138 @@
+[Running] python -u "c:\Users\ARD\Desktop\yukiii-smartest\main.py"
+Microservice Name: robot-shop
+Metric Cohesion, ALCOM: 0.8445962431072528
+Metric Cohesion, Average LCOM4: 1.4285714285714286
+Metric Cohesion, Average LCOM5: 0.46020126072757656
+Metric Coupling, ADCS: 0.8571428571428571
+Metric Coupling, SCF: 0.14285714285714285
+Metric Coupling, Average ACS: 0.42857142857142855
+Metric Complexity, TCM: 13.333333333333334
+Metric Complexity, Average Halstead's metric (Difficulty): 6.932330792712581
+Metric Complexity, Average CC: 3.6557700347549966
+Metric Complexity, Average ICC: 0.5427191316059683
+Metric Granularity, Average NOO: 20.571428571428573
+Metric Granularity, Average NO nanoentities: 61.857142857142854
+Metric Granularity, Average LOC: 280.0
+Metric Granularity, Average SGM: 0.3325396825396825
+
+Service Name : cart, Language : js
+Metric LCOM : 0.7807017543859649
+Metric LCOM4 : 1
+Metric LCOM5 : 0.23666666666666666
+Metric ADS : 0
+Metric AIS : 2
+Metric ACS : 0
+Metric NOO : 19
+Metric NO nanoentities : 73
+Metric LOC : 338
+Metric SGM : 0.125
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 10.056757414503615
+Metric CC : 4.315789473684211
+Metric ICC : 0.5650887573964497
+
+Service Name : catalog, Language : js
+Metric LCOM : 0.75
+Metric LCOM4 : 1
+Metric LCOM5 : 0.3473684210526316
+Metric ADS : 0
+Metric AIS : 2
+Metric ACS : 0
+Metric NOO : 14
+Metric NO nanoentities : 43
+Metric LOC : 156
+Metric SGM : 0.16666666666666669
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 4.479836233806332
+Metric CC : 2.642857142857143
+Metric ICC : 0.6089743589743589
+
+Service Name : dispatch, Language : go
+Metric LCOM : 0.8367346938775511
+Metric LCOM4 : 1
+Metric LCOM5 : 1.0
+Metric ADS : 2
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 7
+Metric NO nanoentities : 35
+Metric LOC : 174
+Metric SGM : 0
+Metric TCM : 2.5
+Metric ComF : 0
+Metric HM : 11.490288993724631
+Metric CC : 4.714285714285714
+Metric ICC : 0.43103448275862066
+
+Service Name : payment, Language : py
+Metric LCOM : 0.8831168831168831
+Metric LCOM4 : 1
+Metric LCOM5 : 1
+Metric ADS : 3
+Metric AIS : 1
+Metric ACS : 3
+Metric NOO : 11
+Metric NO nanoentities : 38
+Metric LOC : 154
+Metric SGM : 1.0833333333333333
+Metric TCM : 2.3333333333333335
+Metric ComF : 1.0
+Metric HM : 5.162799479739967
+Metric CC : 4.7272727272727275
+Metric ICC : 0.7012987012987013
+
+Service Name : ratings, Language : php
+Metric LCOM : 0.9537037037037037
+Metric LCOM4 : 1
+Metric LCOM5 : 0.0
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 27
+Metric NO nanoentities : 69
+Metric LOC : 434
+Metric SGM : 0.5499999999999999
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 3.3961588190849943
+Metric CC : 3.185185185185185
+Metric ICC : 0.4147465437788018
+
+Service Name : shipping, Language : java
+Metric LCOM : 0.9683333333333334
+Metric LCOM4 : 4
+Metric LCOM5 : 0.3494949494949495
+Metric ADS : 1
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 50
+Metric NO nanoentities : 123
+Metric LOC : 443
+Metric SGM : 0.2777777777777778
+Metric TCM : 11.0
+Metric ComF : 1.0
+Metric HM : 9.270686578558461
+Metric CC : 2.88
+Metric ICC : 0.5146726862302483
+
+Service Name : user, Language : js
+Metric LCOM : 0.7395833333333333
+Metric LCOM4 : 1
+Metric LCOM5 : 0.2878787878787879
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 16
+Metric NO nanoentities : 52
+Metric LOC : 261
+Metric SGM : 0.125
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 4.669788029570066
+Metric CC : 3.125
+Metric ICC : 0.5632183908045977
+
+
+[Done] exited with code=0 in 2.889 seconds

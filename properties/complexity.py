@@ -2,9 +2,8 @@ import math
 import json
 import networkx as nx
 
-# import sys, os
-# sys.path.append(os.path.abspath("C:/Users/ARD/Desktop/tesis-kevin"))
-
+import sys, os
+sys.path.append(os.path.abspath("C:/Users/ARD/Desktop/yukiii-smartest"))
 from extract_param import java, py, js, php, go
 
 def calculate_halstead_metric(n1, n2, N1, N2):
@@ -134,10 +133,11 @@ lang_list = {
     'go': {'lang': 'go', 'extract': go._extract_from_dir, 'parse' : go._parse_tree_content, 'func': go._parse_function_variable}
 }
 
-# lang = 'go'
+lang = 'java'
 # dir_path = "D://DATA//java//intellij//bravo-branch-service//src//main"
 # dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
 # dir_path = "C://Users//ARD//Desktop//robot-shop"
+# dir_path = "C://Users//ARD//Desktop//bqm-repo//agent_management"
 # dir_path = "./example/go/rs"
 # tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)

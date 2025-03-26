@@ -24,9 +24,10 @@ def _extract_from_dir(dir_path, parser, lang) -> dict:
                 total_loc, effective_loc = count_lines_of_code(file_path)
                 loc = loc + effective_loc
 
-            elif 'application' in filename and filename.endswith(".yaml"):
+            elif 'application' in filename and (filename.endswith(".yaml") or filename.endswith("yml")):
                 file_path = os.path.join(dirpath, filename)
                 file_content = _parse_content_yaml(file_path)
+                # print(file_content)
 
                 contents[file_path.replace('./','').replace('/','.').replace('\\', '.')] = file_content
 
@@ -104,9 +105,10 @@ def _parse_tree_package(tree_contents) -> str:
 
 def _parse_content_yaml(file_path) -> any:
     with open(file_path, "r") as file:
-        config = yaml.safe_load(file)
+        # config = yaml.safe_load(file)
+        configs = list(yaml.safe_load_all(file))
 
-    return config
+    return configs
 
 def flatten_dict(d, parent_key='', sep='.'):
     items = {}
@@ -121,7 +123,10 @@ def flatten_dict(d, parent_key='', sep='.'):
 def convert_java_format_to_python(java_format, *args):
     """Convert Java's String.format syntax to Python .format() syntax"""
     python_format = re.sub(r'%s', '{}', java_format)
-    return python_format.format(*args)
+    try:
+        return python_format.format(*args)
+    except Exception:
+        return ''
 
 def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
@@ -135,12 +140,17 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
         if key == 'loc':
             continue
 
-        if 'application' in key and isinstance(tree, dict):
-            items = flatten_dict(tree)
+        if 'application' in key and isinstance(tree, list):
+            items = {}
+            for tr in tree:
+                items.update(flatten_dict(tr))
+
             for name, item in items.items():
                 global_vars[key +"."+ name] = item
             continue
 
+        if tree is None:
+            continue
         elif isinstance(tree, javalang.tree.CompilationUnit):
             for path, node in tree.filter(javalang.tree.InterfaceDeclaration):
                 for annotation in node.annotations:
@@ -168,6 +178,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
 
                         if method_name == 'format':
                             args = declarator.initializer.arguments
+                            format_str = ''
                             if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                 format_str = args[0].value
 
@@ -312,6 +323,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                 method_args = []
                                 if method_name == 'format':
                                     args = expression.arguments
+                                    format_str = ''
                                     if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                         format_str = args[0].value
 
@@ -370,6 +382,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                     method_args = []
                                     if method_name == 'format':
                                         args = initializer.arguments
+                                        format_str = ''
                                         if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                             format_str = args[0].value
 
@@ -424,8 +437,8 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                             array_list.append(initializer2.value)
                                     local_vars[var_name] = array_list
 
-                                # elif isinstance(initializer, javalang.tree.BinaryOperation):
-                                #     local_vars[var_name] = get_BinOp(initializer)
+                                elif isinstance(initializer, javalang.tree.BinaryOperation):
+                                    local_vars[var_name] = get_BinOp(initializer)
                                 else:
                                     # Jika initializer adalah literal
                                     local_vars[var_name] = getattr(initializer, 'value', 'None')
@@ -445,6 +458,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                     method_args = []
                                     if method_name == 'format':
                                         args = initializer.arguments
+                                        format_str = ''
                                         if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                             format_str = args[0].value
 
@@ -480,11 +494,13 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                             # else:
                                             #     method_args.append(str(arg))
 
-                                    local_vars[var_name] = {
-                                        "method": method_name,
-                                        "arguments": method_args
-                                    }
-                                    # --------------------eaeaea
+                                    if method_name == 'replace':
+                                        local_vars[var_name] = initializer.qualifier
+                                    else:
+                                        local_vars[var_name] = {
+                                            "method": method_name,
+                                            "arguments": method_args
+                                        }
 
                                     called_methods.append({
                                         "method": method_name,
@@ -500,9 +516,11 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                         if isinstance(initializer2, javalang.tree.Literal):
                                             array_list.append(initializer2.value)
                                     local_vars[var_name] = array_list
-                                # elif isinstance(initializer, javalang.tree.BinaryOperation):
-                                #     local_vars[var_name] = get_BinOp(initializer)
+                                elif isinstance(initializer, javalang.tree.BinaryOperation):
+                                    local_vars[var_name] = get_BinOp(initializer)
 
+                                elif isinstance(initializer, javalang.tree.MemberReference):
+                                    local_vars[var_name] = initializer.member
                                 else:
                                     # Jika initializer adalah literal
                                     local_vars[var_name] = getattr(initializer, 'value', 'None')
@@ -525,6 +543,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                             method_args = []
                                             if method_name == 'format':
                                                 args = initializer.arguments
+                                                format_str = ''
                                                 if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                                     format_str = args[0].value
 
@@ -602,6 +621,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                             method_args = []
                             if method_name == 'format':
                                 args = inner_node.arguments
+                                format_str = ''
                                 if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                     format_str = args[0].value
 
@@ -680,6 +700,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
             method_args = []
             if method_name == 'format':
                 args = initializer.arguments
+                format_str = ''
                 if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                     format_str = args[0].value
 
@@ -742,6 +763,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
 
                             if method_name == 'format':
                                 args = initializer.arguments
+                                format_str = ''
                                 if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                     format_str = args[0].value
 
@@ -816,6 +838,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
 
                         if method_name == 'format':
                             args = expression.arguments
+                            format_str = ''
                             if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                 format_str = args[0].value
 
@@ -845,7 +868,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                                 elif isinstance(arg, javalang.tree.MemberReference):
                                     method_args.append(arg.member)
                                 elif isinstance(arg, javalang.tree.BinaryOperation):
-                                    method_args(get_BinOp(initializer))
+                                    method_args.append(get_BinOp(arg))
                                 elif isinstance(arg, javalang.tree.Literal):
                                     method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
                                 # else:
@@ -877,6 +900,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
 
                             if method_name == 'format':
                                 args = initializer.arguments
+                                format_str = ''
                                 if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                     format_str = args[0].value
 
@@ -957,6 +981,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                     method_args = []
                     if method_name == 'format':
                         args = initializer.arguments
+                        format_str = ''
                         if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                             format_str = args[0].value
 
@@ -1035,6 +1060,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             method_args = []
                             if method_name == 'format':
                                 args = initializer.arguments
+                                format_str = ''
                                 if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                     format_str = args[0].value
 
@@ -1108,6 +1134,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                         method_args = []
                         if method_name == 'format':
                             args = expression.arguments
+                            format_str = ''
                             if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                 format_str = args[0].value
 
@@ -1167,6 +1194,7 @@ def get_for_if_while_switch(statement, local_vars, called_methods, called_set):
                             method_args = []
                             if method_name == 'format':
                                 args = initializer.arguments
+                                format_str = ''
                                 if isinstance(args[0], javalang.tree.Literal) and '%' in args[0].value:
                                     format_str = args[0].value
 
@@ -1325,9 +1353,11 @@ def get_complexity_element(tree):
 
 
 # tree_contents = _extract_from_dir("./example/java/test", _parse_tree_content, "java")
+# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//bqm-repo//agent_management", _parse_tree_content, "java")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
+# print(json.dumps(variable_func['global_vars'], indent=2))
 # print(json.dumps(variable_func['functions'], indent=2))
 
 

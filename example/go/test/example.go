@@ -56,20 +56,28 @@ import (
 // 	}
 // }
 
-func bar(myList *string) string {
-	// a = globalRunCount + 1 + 2
-	// if globalRunCount < 2 {
-	// 	bar(myList)
-	// }
-	fmt.Println("hello")
-	a := baz("a", "b")
-	return 'b'
+func (s *Server) Run() error {
+
+	s.uuid = uuid.New().String()
+
+	return srv.Serve(lis)
 }
 
-func multiply(x int, y int) int {
-    product := x * y
-    return product
-}
+
+// func bar(myList *string) string {
+// 	// a = globalRunCount + 1 + 2
+// 	// if globalRunCount < 2 {
+// 	// 	bar(myList)
+// 	// }
+// 	fmt.Println("hello")
+// 	a := baz("a", "b")
+// 	return 'b'
+// }
+
+// func multiply(x int, y int) int {
+//     product := x * y
+//     return product
+// }
 
 // func processSale(parentSpan ot.Span) {
 	// for {
@@ -156,48 +164,48 @@ func multiply(x int, y int) int {
 // 	fmt.Println(resp.Status)
 // }
 
-func main1() {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
+// func main1() {
+// 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer conn.Close()
 
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer ch.Close()
+// 	ch, err := conn.Channel()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer ch.Close()
 
-	queue, err := ch.QueueDeclare(
-		"agent_queue",
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	queue, err := ch.QueueDeclare(
+// 		"agent_queue",
+// 		false,
+// 		false,
+// 		false,
+// 		false,
+// 		nil,
+// 	)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	body := "Hello, RabbitMQ!"
-	err = ch.Publish(
-		"",
-		queue.Name,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		},
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	body := "Hello, RabbitMQ!"
+// 	err = ch.Publish(
+// 		"",
+// 		queue.Name,
+// 		false,
+// 		false,
+// 		amqp.Publishing{
+// 			ContentType: "text/plain",
+// 			Body:        []byte(body),
+// 		},
+// 	)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	fmt.Println(" [x] Sent:", body)
-}
+// 	fmt.Println(" [x] Sent:", body)
+// }
 
 // func main() {
 // 	writer := kafka.NewWriter(kafka.WriterConfig{
@@ -219,21 +227,21 @@ func main1() {
 // }
 
 
-func (app Application) Routes() http.Handler {
-	var router = httprouter.New()
-	secure := alice.New(app.checkToken)
+// func (app Application) Routes() http.Handler {
+// 	var router = httprouter.New()
+// 	secure := alice.New(app.checkToken)
 
-	router.HandlerFunc(http.MethodPost, "/v1/auth/signin", app.SignIn)
+// 	router.HandlerFunc(http.MethodPost, "/v1/auth/signin", app.SignIn)
 
-	router.HandlerFunc(http.MethodGet, "/v1/movies", app.getAllMovies)
-	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", app.getOneMovies)
-	// router.HandlerFunc(http.MethodGet, "/v1/admin/status", app.statusHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/admin/movies", app.createMovie)
-	router.HandlerFunc(http.MethodPut, "/v1/admin/movies/:id", app.editMovie)
+// 	router.HandlerFunc(http.MethodGet, "/v1/movies", app.getAllMovies)
+// 	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", app.getOneMovies)
+// 	// router.HandlerFunc(http.MethodGet, "/v1/admin/status", app.statusHandler)
+// 	router.HandlerFunc(http.MethodPost, "/v1/admin/movies", app.createMovie)
+// 	router.HandlerFunc(http.MethodPut, "/v1/admin/movies/:id", app.editMovie)
 
-	router.GET("/v1/admin/status", app.wrapMiddleware(secure.ThenFunc(app.statusHandler)))
+// 	router.GET("/v1/admin/status", app.wrapMiddleware(secure.ThenFunc(app.statusHandler)))
 
-	return app.enableCORS(router)
-}
+// 	return app.enableCORS(router)
+// }
 
 

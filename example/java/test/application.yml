@@ -1,0 +1,338 @@
+server:
+  port: 8086
+
+# Metrics configuration for Spring Actuator and also prometheus, it's the same for all profiles
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health, metrics, prometheus, logfile, db-check
+  endpoint:
+    logfile:
+      external_file: logs/log.log
+  metrics:
+    export:
+      atlas:
+        enabled: false
+# Remember that the name of the application has to be the same name of the registered service in the service discovery tool
+spring:
+  profiles:
+    active: "prodbak"
+  application:
+    name: andromeda-agentmanagement
+
+---
+spring:
+  profiles: prod
+  config:
+    use-legacy-processing: true
+  datasource:
+    driverClassName: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@//128.21.22.31:1521/ajsdb
+    username: dev
+    password: linkdev
+    hikari:
+      connection-timeout: 5000
+      maximum-pool-size: 10
+      minimum-idle: 1
+      idle-timeout: 60000
+      max-lifetime: 3600000
+      pool-name: AgentManagement
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    hibernate:
+      ddl-auto: none
+    mapping-resources:
+      - META-INF/stored-procedure.xml
+      - META-INF/agent-queries.xml
+      - META-INF/alteration-queries.xml
+      - META-INF/auto-eligible-queries.xml
+      - META-INF/common-queries.xml
+      - META-INF/workflow-queries.xml
+      - META-INF/sequence-queries.xml
+      - META-INF/topup-queries.xml
+      - META-INF/refund-queries.xml
+      - META-INF/payment-queries.xml
+      - META-INF/report/validasi-agent-aktif.xml
+      - META-INF/report/automatic-promosi-agent-aktif.xml
+      - META-INF/report/automatic-promosi-detail-wape.xml
+      - META-INF/report/automatic-promosi-summary.xml
+      - META-INF/report/validasi-detail-wape.xml
+      - META-INF/report/validasi-summary.xml
+      - META-INF/churning-queries.xml
+    properties:
+      hibernate:
+        format_sql: false
+    show-sql: false
+  kafka:
+    bootstrap-servers: 128.21.33.43:9092
+    topic1: devserver-regenerateFurtherDoc
+    topic2: devserver-pdfLicenseAaji
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: etl
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  main:
+    allow-circular-references: true
+
+api:
+  baseUrlZuulAndromeda: https://andromedadev-api-sandbox.sinarmasmsiglife.co.id
+  cosmos:
+    uri-pushnotif: /cosmos-zuulserver/api-notif/pushnotif
+    uri-sendmail: /cosmos-zuulserver/service-email/send
+  spica:
+    uri-checkBankAccount: /andromeda-spicarule/api/spica/screening-bank-account
+    uri-screeningAgentAlteration: /andromeda-spicarule-agentalteration/api/spica/screening-wfaction
+  orion:
+    uri-newDashboard: /orion-generalinfo/newdashboard
+    uri-regeneratecontractBP: /orion-businesssubmission/regeneratecontract
+    base-uri: https://orion-api-sandbox.sinarmasmsiglife.co.id
+    uri-orion-newDashboard: /generalinfo/newdashboard
+    uri-orion-regeneratecontractBP: /businesssubmission/regeneratecontract
+  onboarding:
+    uri-regenerateAgentDoc: /andromeda-onboarding/agent/regenerate-agent-doc
+  genericService:
+    uri-generateReport: /andromeda-genericservice/report
+
+mail:
+  config:
+    systemName: ANDROMEDA
+    priority: 10
+    generalSenderMail: info@sinarmasmsiglife.co.id
+    subject1: "ORION - Topup Lisensi {noReg} - {agentName}"
+    additionalTo1: herry.windarto@sinarmasmsiglife.co.id;ibnu.priyambodo@sinarmasmsiglife.co.id;tri.handini@sinarmasmsiglife.co.id
+    additionalCc1:
+    templateName1: topup-agent-success
+    subject2: "Report Excel Agent - {jenisReport}"
+    additionalTo2:
+    additionalCc2: herry.windarto@sinarmasmsiglife.co.id;ibnu.priyambodo@sinarmasmsiglife.co.id;tri.handini@sinarmasmsiglife.co.id
+    templateName2: report-download-success
+    subject3: "ANDROMEDA - Request Approval Refund {refundId}"
+    additionalTo3: tri.handini@sinarmasmsiglife.co.id
+    additionalCc3: ibnu.priyambodo@sinarmasmsiglife.co.id
+    templateName3: refund-process-success
+
+push:
+  notif:
+    title1: Top Up Agent Berhasil
+    message1: Top up agent {agentName} sebesar Rp. {amount} telah berhasil. Menunggu proses lisensi selanjutnya
+    title2: Top Up Agent Expired
+    message2: Top up agent {agentName} sebesar Rp. {amount} telah expired. Mohon Lakukan proses Top Up kembali
+    title3: Top Up Agent Dibatalkan
+    message3: Top up agent {agentName} sebesar Rp. {amount} telah dibatalkan. Mohon Lakukan proses Top Up kembali
+    title4: Refund Agent Berhasil
+    message4: Pengajuan Refund Agent {agentName} sebesar Rp. {amount} berhasil. Mohon menunggu proses transfer.
+    title5: Refund Agent Ditolak
+    message5: Pengajuan Refund Agent {agentName} sebesar Rp. {amount} telah ditolak.
+    title6: Top Up Agent Sudah Diproses
+    message6: Request Top up agent {agentName} sebesar Rp. {amount} telah diproses. Mohon lakukan proses pembayaran
+
+doc:
+  config:
+    documentListPath: /mnt/storage/andromeda/dev/agent/{kodeAgent}
+    documentPath: /mnt/storage/andromeda/dev/agent/{kodeAgent}/{namaFile}
+    documentListOrionPath: /mnt/storage/orion_rekrutmen/agent_code/{kodeAgent}/promotion
+    documentOrionPath: /mnt/storage/orion_rekrutmen/agent_code/{kodeAgent}/promotion/{namaFile}
+  report:
+    parentFolder: /mnt/storage/andromeda/prod/report/agent/{year}
+    subFolder: /mnt/storage/andromeda/prod/report/agent/{year}/{subFolder}
+    fileReport: /mnt/storage/andromeda/prod/report/agent/{year}/{subFolder}/{fileName}
+    linkFile: //storage.sinarmasmsiglife.co.id/pdfind/andromeda/prod/report/agent/{year}/{subFolder}/{fileName}
+    fileName1: reportautomaticpromosi-agentaktif
+    fileName2: reportautomaticpromosi-detailwape
+    fileName3: reportautomaticpromosi-summary
+    fileName4: reportvalidasi-agentaktif
+    fileName5: reportvalidasi-detailwape
+    fileName6: reportvalidasi-summary
+
+scheduler:
+  interval:
+    updatePtkpAgent: "0 0 0 1 1 ?"
+    getEligiblePromotion: "0 30 0 * * ?"
+    getEligibleDemotion: "0 30 0 * * ?"
+    notifEligiblePromotionMonthly: "0 0 0 1 * ?"
+    notifReminderEligiblePromotion: "0 0 0 * * ?"
+    notifNewEligiblePromotion: "0 0 7 * * ?"
+    holdProductionChurning : 300
+
+webhook:
+  ms-teams:
+    uri1: "https://sinarmasmsiglife.webhook.office.com/webhookb2/4895facd-d39b-4244-b935-b2ac223bf652@1d4d52ca-cb56-48d8-8045-ce47abf97fd6/IncomingWebhook/b3a8ce0054434ed3aa14906078dd376d/73cc1eed-e463-4531-8197-bae3b5d214f0" # general error
+    summary1: "Andromeda API Error"
+    activityTitle1: "Application Name : {appName}"
+    activitySubtitle1: "HostName: {hostName}, HostAddress: {hostAddress}"
+    themeColor1: "0076D7"
+    active1: 0
+
+logbook:
+  format.style: json
+
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 30
+    leaseExpirationDurationInSeconds: 90
+    preferIpAddress: true
+    hostname: andromeda-agentmanagement
+  client:
+    enabled: true
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://eureka-0.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-1.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-2.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-3.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-4.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-5.eureka.cosmos.svc.cluster.local:8080/eureka
+
+---
+spring:
+  profiles: prodbak
+  config:
+    use-legacy-processing: true
+  datasource:
+    driverClassName: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@//ajsdb.msiglife.co.id:1521/ajsdb
+    username: dev
+    password: linkdev
+    hikari:
+      connection-timeout: 5000
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 60000
+      max-lifetime: 1800000
+      pool-name: AgentManagement
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    hibernate:
+      ddl-auto: none
+    mapping-resources:
+      - META-INF/stored-procedure.xml
+      - META-INF/agent-queries.xml
+      - META-INF/alteration-queries.xml
+      - META-INF/auto-eligible-queries.xml
+      - META-INF/common-queries.xml
+      - META-INF/workflow-queries.xml
+      - META-INF/sequence-queries.xml
+      - META-INF/topup-queries.xml
+      - META-INF/refund-queries.xml
+      - META-INF/payment-queries.xml
+      - META-INF/report/validasi-agent-aktif.xml
+      - META-INF/report/automatic-promosi-agent-aktif.xml
+      - META-INF/report/automatic-promosi-detail-wape.xml
+      - META-INF/report/automatic-promosi-summary.xml
+      - META-INF/report/validasi-detail-wape.xml
+      - META-INF/report/validasi-summary.xml
+      - META-INF/churning-queries.xml
+    properties:
+      hibernate:
+        format_sql: false
+    show-sql: false
+
+api:
+  baseUrlZuulAndromeda: http://zuul-server.andromeda.svc.cluster.local:8687
+  cosmos:
+    uri-pushnotif: /cosmos-zuulserver/api-notif/pushnotif
+    uri-sendmail: /cosmos-zuulserver/service-email/send
+  spica:
+    uri-checkBankAccount: /andromeda-spicarule/api/spica/screening-bank-account
+    uri-screeningAgentAlteration: http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-spicarule-agentalteration/api/spica/screening-wfaction
+  orion:
+    uri-newDashboard: /orion-generalinfo/newdashboard
+    uri-regeneratecontractBP: /orion-businesssubmission/regeneratecontract
+    base-uri: https://orion-api-sandbox.sinarmasmsiglife.co.id
+    uri-orion-newDashboard: /generalinfo/newdashboard
+    uri-orion-regeneratecontractBP: /businesssubmission/regeneratecontract
+  onboarding:
+    uri-regenerateAgentDoc: /andromeda-onboarding/agent/regenerate-agent-doc
+  genericService:
+    uri-generateReport: /andromeda-genericservice/report
+  financing:
+    uri-update: /andromeda-compensationcalculation/financing/update
+  linx:
+    base-uri: http://zuul-server-auth.andromeda.svc.cluster.local:8688
+    uri-agent-data: /linx-newbusiness-api/referral/agentData
+
+mail:
+  config:
+    systemName: ANDROMEDA
+    priority: 10
+    generalSenderMail: info@sinarmasmsiglife.co.id
+    subject1: "ORION - Topup Lisensi {noReg} - {agentName}"
+    additionalTo1: herry.windarto@sinarmasmsiglife.co.id;ibnu.priyambodo@sinarmasmsiglife.co.id;tri.handini@sinarmasmsiglife.co.id
+    additionalCc1:
+    templateName1: topup-agent-success
+    subject2: "Report Excel Agent - {jenisReport}"
+    additionalTo2:
+    additionalCc2: herry.windarto@sinarmasmsiglife.co.id;ibnu.priyambodo@sinarmasmsiglife.co.id;tri.handini@sinarmasmsiglife.co.id
+    templateName2: report-download-success
+    subject3: "ANDROMEDA - Request Approval Refund {refundId}"
+    additionalTo3: tri.handini@sinarmasmsiglife.co.id
+    additionalCc3: ibnu.priyambodo@sinarmasmsiglife.co.id
+    templateName3: refund-process-success
+
+push:
+  notif:
+    title1: Top Up Agent Berhasil
+    message1: Top up agent {agentName} sebesar Rp. {amount} telah berhasil. Menunggu proses lisensi selanjutnya
+    title2: Top Up Agent Expired
+    message2: Top up agent {agentName} sebesar Rp. {amount} telah expired. Mohon Lakukan proses Top Up kembali
+    title3: Top Up Agent Dibatalkan
+    message3: Top up agent {agentName} sebesar Rp. {amount} telah dibatalkan. Mohon Lakukan proses Top Up kembali
+    title4: Refund Agent Berhasil
+    message4: Pengajuan Refund Agent {agentName} sebesar Rp. {amount} berhasil. Mohon menunggu proses transfer.
+    title5: Refund Agent Ditolak
+    message5: Pengajuan Refund Agent {agentName} sebesar Rp. {amount} telah ditolak.
+    title6: Top Up Agent Sudah Diproses
+    message6: Request Top up agent {agentName} sebesar Rp. {amount} telah diproses. Mohon lakukan proses pembayaran
+
+doc:
+  config:
+    documentListPath: /mnt/storage/andromeda/prod/agent/{kodeAgent}
+    documentPath: /mnt/storage/andromeda/prod/agent/{kodeAgent}/{namaFile}
+    documentListOrionPath: /mnt/storage/orion_rekrutmen/agent_code/{kodeAgent}/promotion
+    documentOrionPath: /mnt/storage/orion_rekrutmen/agent_code/{kodeAgent}/promotion/{namaFile}
+  report:
+    parentFolder: /mnt/storage/andromeda/prod/report/agent/{year}
+    subFolder: /mnt/storage/andromeda/prod/report/agent/{year}/{subFolder}
+    fileReport: /mnt/storage/andromeda/prod/report/agent/{year}/{subFolder}/{fileName}
+    linkFile: //storage.sinarmasmsiglife.co.id/pdfind/andromeda/prod/report/agent/{year}/{subFolder}/{fileName}
+    fileName1: reportautomaticpromosi-agentaktif
+    fileName2: reportautomaticpromosi-detailwape
+    fileName3: reportautomaticpromosi-summary
+    fileName4: reportvalidasi-agentaktif
+    fileName5: reportvalidasi-detailwape
+    fileName6: reportvalidasi-summary
+
+scheduler:
+  interval:
+    updatePtkpAgent: "0 0 0 1 1 ?"
+    getEligiblePromotion: "0 30 0 * * ?"
+    getEligibleDemotion: "0 30 0 * * ?"
+    notifEligiblePromotionMonthly: "0 0 0 1 * ?"
+    notifReminderEligiblePromotion: "0 0 0 * * ?"
+    notifNewEligiblePromotion: "0 0 7 * * ?"
+    holdProductionChurning : 10
+
+webhook:
+  ms-teams:
+    uri1: "https://sinarmasmsiglife.webhook.office.com/webhookb2/4895facd-d39b-4244-b935-b2ac223bf652@1d4d52ca-cb56-48d8-8045-ce47abf97fd6/IncomingWebhook/1eff73ce9470434495a6bbd27b033255/73cc1eed-e463-4531-8197-bae3b5d214f0" # general error
+    summary1: "Andromeda API Error"
+    activityTitle1: "Application Name : {appName}"
+    activitySubtitle1: "HostName: {hostName}, HostAddress: {hostAddress}"
+    themeColor1: "0076D7"
+    active1: 1
+
+logbook:
+  format.style: json
+
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 30
+    leaseExpirationDurationInSeconds: 90
+    preferIpAddress: true
+    hostname: andromeda-agentmanagement
+  client:
+    enabled: true
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://eureka-0.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-1.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-2.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-3.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-4.eureka.cosmos.svc.cluster.local:8080/eureka,http://eureka-5.eureka.cosmos.svc.cluster.local:8080/eureka

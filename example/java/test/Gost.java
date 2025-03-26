@@ -136,28 +136,67 @@ class Gost {
     //     }
     // }
     // String queue = "CART_ENDPOINT";
-    private String CART_URL = String.format("http://%s/shipping/", getenv("CART_ENDPOINT"));
+    // private String CART_URL = String.format("http://%s/shipping/", getenv("CART_ENDPOINT"));
     // private String CART_URL = String.format("http://%s/shipping/", queue);
 
-    private String getenv(String key, String def) {
-        String val = System.getenv(key);
-        val = val == null ? def : val;
+    // private String getenv(String key, String def) {
+    //     String val = System.getenv(key);
+    //     val = val == null ? def : val;
 
-        return val;
-    }
+    //     return val;
+    // }
 
-    public int add(int a, int b) {
-        int sum = a + b;
-        if(a == 0) {
-            a = b;
-        } else if (a == 1) {
-            a = c;
-        } 
-        return sum;
-    }
+    // public int add(int a, int b) {
+    //     int sum = a + b;
+    //     if(a == 0) {
+    //         a = b;
+    //     } else if (a == 1) {
+    //         a = c;
+    //     }
+    //     return sum;
+    // }
+
+    // public ResponseSuccessTemplate<AlterationDtoResp> updateRequestEditBankInformation(
+    //     BankInformationDto request) throws JsonProcessingException {
+    //   log.info("Update request edit Bank Information Agent: {}", request);
+    //   hitSpicaScreeningAlteration(approvalId);
+
+    //   AlterationDtoResp alterationDtoResp = AlterationDtoResp.builder()
+    //       .transactionId(approvalId)
+    //       .message("Update Request Edit Bank Information Success")
+    //       .build();
+
+    //   return ResponseSuccessTemplate.<AlterationDtoResp>builder()
+    //       .respCode(String.valueOf(HttpStatus.OK.value()))
+    //       .respDesc(HttpStatus.OK.getReasonPhrase()).data(alterationDtoResp)
+    //       .timestamp(LocalDateTime.now()).build();
+    // }
+
+    // public ResponseSuccessTemplate<AlterationDtoResp> updatseRequestEditBankInformation(
+    //     BankInformationDto request) throws JsonProcessingException {
+    //   log.info("Update request edit Bank Information Agent: {}", request);
+    //   ScreeningAlterationDtoReq screeningReq = ScreeningAlterationDtoReq.builder()
+    //       .docNumber(approvalId).build();
+    //   String screeningResp = spicaWS.callScreeningAgentAlteration(jsonConverter.toJson(screeningReq));
+    //   log.info("Response screening agent alteration : " + screeningResp);
+
+    //   AlterationDtoResp alterationDtoResp = AlterationDtoResp.builder()
+    //       .transactionId(approvalId)
+    //       .message("Update Request Edit Bank Information Success")
+    //       .build();
+
+    //   return ResponseSuccessTemplate.<AlterationDtoResp>builder()
+    //       .respCode(String.valueOf(HttpStatus.OK.value()))
+    //       .respDesc(HttpStatus.OK.getReasonPhrase()).data(alterationDtoResp)
+    //       .timestamp(LocalDateTime.now()).build();
+    // }
+
+    // public void hitSpicaScreeningAlteration(String approvalId) {
+    //     ScreeningAlterationDtoReq screeningReq = ScreeningAlterationDtoReq.builder()
+    //         .docNumber(approvalId).build();
+    //     String screeningResp = spicaWS.callScreeningAgentAlteration(jsonConverter.toJson(screeningReq));
+    //     log.info("Response screening agent alteration : " + screeningResp);
+    // }
 
 }
-
-// To compile:
-//     rm example.class ; javac example.java ; ls -l example.java example.class ; java example
 

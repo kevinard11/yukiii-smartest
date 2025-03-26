@@ -4,7 +4,7 @@ import yaml
 def main():
 
     # Import config
-    config = import_config("C://Users//ARD//Desktop//robot-shop//yukiii-maqa.yaml")
+    config = import_config("C://Users//ARD//Desktop//bqm-repo//smartest.yaml")
 
     # Create microservices
     mss = microservices.Microservices(config)

@@ -1,4 +1,7 @@
 import networkx as nx
+
+import sys, os
+sys.path.append(os.path.abspath("C:/Users/ARD/Desktop/yukiii-smartest"))
 from extract_param import java, py, js, php, go
 
 from collections import defaultdict
@@ -461,7 +464,7 @@ def _calculate_alcom(total_lcom, total_services):
 def _calculate_lcom4(functions):
 
     all_func_param = get_all_func_params(functions)
-    # print(all_func_param)
+    # print(len(all_func_param))
     G = build_function_graph(all_func_param)
     connected_component = nx.number_connected_components(G)
 
@@ -495,6 +498,8 @@ def _calculate_lcom5(variable_func):
         # print(class_name, lcom5)
         if lcom5[0] != float('inf'):
             lcom5_class[class_name] = lcom5[0]
+        else:
+            lcom5_class[class_name] = 0
 
     # print(len(lcom5_class))
 
@@ -569,13 +574,14 @@ lang_list = {
 
 lang = 'java'
 
-# dir_path = "D://DATA//java//intellij//bravo-branch-service//src//main"
+# dir_path = "D://DATA//java//intellij//bravo-branch-service"
 # dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
 # dir_path = "C://Users//ARD//Desktop//robot-shop"
-dir_path = "./example/java/rs"
-tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
+# dir_path = "./example/java/rs"
+dir_path = "C://Users//ARD//Desktop//bqm-repo//agent_management"
+# tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
-variable_func = lang_list[lang]['func'](tree_contents)
+# variable_func = lang_list[lang]['func'](tree_contents)
 # print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
 # print(json.dumps(variable_func['functions'], indent=2))
@@ -589,7 +595,7 @@ variable_func = lang_list[lang]['func'](tree_contents)
 # all_func = get_all_func(variable_func["functions"])
 # print(all_func)
 
-# lcom = _calculate_lcom(len(all_params), len(unique_params), len(all_func))
+# lcom = _calculate_lcom(variable_func["functions"])
 # print(lcom)
 
 # lcom4 = _calculate_lcom4(variable_func["functions"])

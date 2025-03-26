@@ -336,6 +336,7 @@ def get_functions(head_node, scope):
         full_func_name = ''
         local_vars = {}
         called_methods = []
+        # print(node)
 
         if node.type == 'function_declaration':
             params = []
@@ -486,6 +487,7 @@ def get_functions(head_node, scope):
     return functions
 
 def get_blocks(node, local_vars, called_methods, full_func_name):
+    # print(node.text.decode())
     if node.type == 'block':
         for child1 in node.children:
             # print(child1)
@@ -497,8 +499,9 @@ def get_blocks(node, local_vars, called_methods, full_func_name):
                         # print(child2.text.decode())
                         for child3 in child2.children:
                             # print(child3)
-                            if child3.type == 'identifier':
+                            if child3.type in ['identifier', 'selector_expression']:
                                 full_func_name = child3.text.decode()
+                                # print(full_func_name)
                             else:
                                 var_value = get_value(child3)
 
@@ -590,9 +593,10 @@ executable_statement_types = {
         "try_statement", "throw_statement"
     }
 
+tree_contents = _extract_from_dir("C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//attractions", _parse_tree_content, "go")
 # tree_contents = _extract_from_dir("./example/go/test", _parse_tree_content, "go")
 # print(tree_contents)
-# variable_func = _parse_function_variable(tree_contents)
+variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
-# print(json.dumps(variable_func['functions'], indent=2))
+print(json.dumps(variable_func['functions'], indent=2))

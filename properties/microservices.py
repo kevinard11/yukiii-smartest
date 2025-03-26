@@ -36,6 +36,8 @@ class Microservices():
                 queue_key = service['queue-key']
                 self.set_service_queue_key(service_key, queue_key)
 
+            # print(service_key)
+
         self.get_called_services()
 
         # Calculate defined metric

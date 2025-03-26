@@ -1,3 +1,5 @@
+import sys, os
+sys.path.append(os.path.abspath("C:/Users/ARD/Desktop/yukiii-smartest"))
 from extract_param import java, py, js, php, go
 
 def get_all_feign_client_function(functions):
@@ -319,6 +321,28 @@ def format_baseurl(baseurl):
             baseurl = baseurl[:-1]
     return baseurl
 
+def get_all_client_function(functions, global_vars, service_base_url):
+    client_funcs = {}
+
+    for key, value in functions.items():
+        local_vars = value['local_vars']
+        nearest_key = '.'.join(key.split('.')[:-1])
+        if 'called_methods' in value:
+            for method in value['called_methods']:
+                if 'qualifier' in method :
+                    if method['qualifier'] == 'Unirest':
+                        if method['arguments']:
+                            for arg in method['arguments']:
+                                baseurl = find_in_local_global_vars(global_vars, local_vars, arg, nearest_key)
+                                # print(baseurl)
+                                if baseurl:
+                                    called_service = find_in_service_base_url(service_base_url, baseurl)
+                                    if called_service:
+                                        client_funcs[key] = {called_service: baseurl}
+                                        break
+
+    return client_funcs
+
 def get_called_service(variable_func, service_base_url, service_queue_topic_routing):
 
     global_vars = variable_func["global_vars"]
@@ -327,67 +351,88 @@ def get_called_service(variable_func, service_base_url, service_queue_topic_rout
 
     # Java
     feign_funcs = get_all_feign_client_function(functions)
+
+    client_funcs = get_all_client_function(functions, global_vars, service_base_url)
     MQ_funcs = get_all_MQ_client_function(functions, global_vars)
 
     for key, function in functions.items():
         nearest_key = '.'.join(key.split('.')[:-1])
         local_vars = function['local_vars']
         for called_method in function['called_methods']:
-            find_called_service(called_services, global_vars, local_vars, called_method, service_base_url, service_queue_topic_routing, feign_funcs, MQ_funcs, nearest_key)
+            find_called_service(called_services, global_vars, local_vars, called_method, service_base_url, service_queue_topic_routing, feign_funcs, MQ_funcs, nearest_key, client_funcs)
 
     for key, function in global_vars.items(): # called outside function (possible in python, go)
         nearest_key = '.'.join(key.split('.')[:-1])
         local_vars = {}
         if key.split('.')[-1] == 'called_methods' :
             for called_method in function:
-                find_called_service(called_services, global_vars, local_vars, called_method, service_base_url, service_queue_topic_routing,feign_funcs, MQ_funcs, nearest_key)
+                find_called_service(called_services, global_vars, local_vars, called_method, service_base_url, service_queue_topic_routing,feign_funcs, MQ_funcs, nearest_key, client_funcs)
         elif isinstance(function, dict) and 'method' in function and 'arguments' in function:
-            find_called_service(called_services, global_vars, local_vars, function, service_base_url, service_queue_topic_routing, feign_funcs, MQ_funcs, nearest_key)
+            find_called_service(called_services, global_vars, local_vars, function, service_base_url, service_queue_topic_routing, feign_funcs, MQ_funcs, nearest_key, client_funcs)
 
     return called_services
 
-def find_called_service(called_services, global_vars, local_vars, called_method, service_base_url, service_queue_topic_routing, feign_funcs, MQ_funcs, nearest_key):
+def find_called_service(called_services, global_vars, local_vars, called_method, service_base_url, service_queue_topic_routing, feign_funcs, MQ_funcs, nearest_key, client_funcs):
     method_name = called_method['method']
     method_args = called_method['arguments']
     method_qua = called_method['qualifier']
 
-    for arg in method_args:
-        if arg and isinstance(arg, str):
-            # print(arg, (arg.startswith('"') or arg.endswith("'")) )
-            if (arg.startswith('"') or arg.startswith("'")) and (arg.endswith('"') or arg.endswith("'")) and (any(arg.replace('"','') in values for values in service_queue_topic_routing.values()) or any(arg.replace("'",'') in values for values in service_queue_topic_routing.values()) or arg.replace('"', '').startswith(('http://', 'https://')) or arg.replace("'", '').startswith(('http://', 'https://'))): # string
-                # print(arg)
-                baseurl = arg.replace('"', '').replace('${', '').replace('}', '').replace("'",'')
-                if baseurl:
-                    called_service = find_in_service_base_url(service_base_url, baseurl)
-                    # print(baseurl, called_service, called_service in called_services)
+    found = False
+
+    if method_name in [k.split(".")[-1] for k in client_funcs.keys()]:
+        for key, value in client_funcs.items():
+            if method_name == key.split(".")[-1]:
+                for k,v in value.items():
+                    called_service = k
                     if called_service in called_services.keys():
-                        called_services[called_service].append(baseurl)
+                        called_services[called_service].append(v)
                     elif called_service != None:
                         called_services[called_service] = []
-                        called_services[called_service].append(baseurl)
-                    # print(called_services)
+                        called_services[called_service].append(v)
+                    found = True
                     break
 
-            else: # reference in local or global variable
-                arg = arg.replace('"', '').replace('${', '').replace('}', '')
-                baseurl = find_in_local_global_vars(global_vars, local_vars, arg, nearest_key)
-                # print(baseurl, arg)
-                if baseurl:
-                    called_service = find_in_service_base_url(service_base_url, baseurl)
-                    # print(baseurl, called_service, called_service in called_services)
-                    if called_service in called_services.keys():
+    if not found:
+        for arg in method_args:
+            if arg and isinstance(arg, str):
+                # print(arg, (arg.startswith('"') or arg.endswith("'")) )
+                if (arg.startswith('"') or arg.startswith("'")) and (arg.endswith('"') or arg.endswith("'")) and (any(arg.replace('"','') in values for values in service_queue_topic_routing.values()) or any(arg.replace("'",'') in values for values in service_queue_topic_routing.values()) or arg.replace('"', '').startswith(('http://', 'https://')) or arg.replace("'", '').startswith(('http://', 'https://'))): # string
+                    # print(arg)
+                    baseurl = arg.replace('"', '').replace('${', '').replace('}', '').replace("'",'')
+                    if baseurl:
+                        called_service = find_in_service_base_url(service_base_url, baseurl)
+                        # print(baseurl, called_service, called_service in called_services)
+                        if called_service in called_services.keys():
+                            called_services[called_service].append(baseurl)
+                        elif called_service != None:
+                            called_services[called_service] = []
+                            called_services[called_service].append(baseurl)
                         # print(called_services)
-                        called_services[called_service].append(baseurl)
-                    elif called_service != None:
-                        called_services[called_service] = []
-                        called_services[called_service].append(baseurl)
-                    # print(called_services)
-                    break
+                        found = True
+                        break
+
+                else: # reference in local or global variable
+                    arg = arg.replace('"', '').replace('${', '').replace('}', '')
+                    baseurl = find_in_local_global_vars(global_vars, local_vars, arg, nearest_key)
+                    # print(baseurl, arg)
+                    if baseurl:
+                        called_service = find_in_service_base_url(service_base_url, baseurl)
+                        # print(baseurl, called_service, called_service in called_services)
+                        if called_service in called_services.keys():
+                            # print(called_services)
+                            called_services[called_service].append(baseurl)
+                        elif called_service != None:
+                            called_services[called_service] = []
+                            called_services[called_service].append(baseurl)
+                        # print(called_services)
+                        found = True
+                        break
 
     # Java
     # Feign Client
-    get_feign_called_service(feign_funcs, called_method, global_vars, called_services, service_base_url)
-    get_MQ_called_service(MQ_funcs, called_method, global_vars, called_services, service_queue_topic_routing, local_vars, nearest_key)
+    if not found:
+        get_feign_called_service(feign_funcs, called_method, global_vars, called_services, service_base_url)
+        get_MQ_called_service(MQ_funcs, called_method, global_vars, called_services, service_queue_topic_routing, local_vars, nearest_key)
 
 def find_in_local_global_vars(global_vars, local_vars, key, nearest_key):
     try:
@@ -474,11 +519,12 @@ lang_list = {
     'go': {'lang': 'go', 'extract': go._extract_from_dir, 'parse' : go._parse_tree_content, 'func': go._parse_function_variable}
 }
 
-# lang = 'py'
+# lang = 'java'
 # dir_path = "D://DATA//java//intellij//bravo-branch-service//src//main"
 # dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
 # dir_path = "C://Users//ARD//Desktop//robot-shop"
-# dir_path = "./example/py/rs"
+# dir_path = "./example/java/test"
+# dir_path = "C://Users//ARD//Desktop//bqm-repo//spica_rule_agentalteration"
 # tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
 # variable_func = lang_list[lang]['func'](tree_contents)
@@ -486,19 +532,24 @@ lang_list = {
 # print(json.dumps(variable_func['global_vars'], indent=2))
 # print(json.dumps(variable_func['functions'], indent=2))
 
-# service_base_url = {
-#     'warriors': ['https://gateway-gc.bfi.co.id/bfibravo/cloud/agency_api/api'],
-#     'confins': ['https://gateway-gc.bfi.co.id'],
-#     'master': ['https://microservices.dev.bravo.bfi.co.id/master'],
-#     'user': ['http://user:8080/', 'http://user:8081/'],
-#     'cart': ['http://CART:8080/']
-# }
+service_base_url = {
+    'warriors': ['https://gateway-gc.bfi.co.id/bfibravo/cloud/agency_api/api'],
+    'confins': ['https://gateway-gc.bfi.co.id'],
+    'master': ['https://microservices.dev.bravo.bfi.co.id/master'],
+    'user': ['http://user:8080/', 'http://user:8081/'],
+    'cart': ['http://CART:8080/'],
+    'spica_rule_agentalteration': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-spicarule-agentalteration/', 'http://andromeda-api.msiglife.co.id/andromeda-agentmanagement/'],
+    'onboarding': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-onboarding/'],
+    'genericService': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-genericservice/'],
+    'financing': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-compensationcalculation/'],
+    'spicarule': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-spicarule/']
+}
 
-# service_queue_topic_routing = {
-#     'master': ['master_queue', 'ssssss'],
-#     'agent': ['agent_queue'],
-#     'order': ['orders']
-# }
+service_queue_topic_routing = {
+    'master': ['master_queue', 'ssssss'],
+    'agent': ['agent_queue'],
+    'order': ['orders']
+}
 
 api_call_framework = {
     "getForObject", "getForEntity", "postForObject", "postForEntity", "put", "delete", "exchange", # Java
@@ -535,3 +586,4 @@ MQ_framework = {
 # called_services = get_called_service(variable_func, service_base_url, service_queue_topic_routing)
 # print(called_services)
 
+# client_function = get_all_client_function(variable_func['functions'], variable_func['global_vars'], service_base_url)
