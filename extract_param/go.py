@@ -80,7 +80,7 @@ def count_lines_of_code(file_path):
     return total_loc, effective_loc
 
 def _parse_content(file_path) -> any:
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         file_contents = f.read()
 
     return file_contents
@@ -593,10 +593,10 @@ executable_statement_types = {
         "try_statement", "throw_statement"
     }
 
-tree_contents = _extract_from_dir("C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//attractions", _parse_tree_content, "go")
+# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services//attractions", _parse_tree_content, "go")
 # tree_contents = _extract_from_dir("./example/go/test", _parse_tree_content, "go")
 # print(tree_contents)
-variable_func = _parse_function_variable(tree_contents)
+# variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
 # print(json.dumps(variable_func['global_vars'], indent=2))
-print(json.dumps(variable_func['functions'], indent=2))
+# print(json.dumps(variable_func['functions'], indent=2))

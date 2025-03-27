@@ -524,6 +524,7 @@ lang_list = {
 # dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
 # dir_path = "C://Users//ARD//Desktop//robot-shop"
 # dir_path = "./example/java/test"
+# dir_path = "C://Users//ARD//Desktop//train-ticket//ts-cancel-service"
 # dir_path = "C://Users//ARD//Desktop//bqm-repo//spica_rule_agentalteration"
 # tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
@@ -542,7 +543,12 @@ service_base_url = {
     'onboarding': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-onboarding/'],
     'genericService': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-genericservice/'],
     'financing': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-compensationcalculation/'],
-    'spicarule': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-spicarule/']
+    'spicarule': ['http://zuul-server.andromeda.svc.cluster.local:8687/andromeda-spicarule/'],
+    'order-service': ['http://ts-order-service:12031'],
+    'auth-service': ['http://ts-auth-service:12031'],
+    'order-other-service': ['http://ts-order-other-service:12031'],
+    'inside-payment-service': ['http://ts-inside-payment-service:12031'],
+    'notification-service': ['http://ts-notification-service:12031'],
 }
 
 service_queue_topic_routing = {

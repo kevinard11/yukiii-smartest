@@ -4,11 +4,11 @@ import yaml
 def main():
 
     # Import config
-    config = import_config("C://Users//ARD//Desktop//bqm-repo//smartest.yaml")
+    config = import_config("C://Users//ARD//Desktop//train-ticket//smartest.yaml")
 
     # Create microservices
     mss = microservices.Microservices(config)
-
+    
     mss.print()
     for ms in mss.services:
         ms.print()

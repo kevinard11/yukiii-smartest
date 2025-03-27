@@ -1,0 +1,785 @@
+[Running] python -u "c:\Users\ARD\Desktop\yukiii-smartest\main.py"
+Microservice Name: train-ticket
+Metric Cohesion, ALCOM: 0.8396744181516902
+Metric Cohesion, Average LCOM4: 1.7333333333333334
+Metric Cohesion, Average LCOM5: 0.3102805737051247
+Metric Coupling, ADCS: 0.3111111111111111
+Metric Coupling, SCF: 0.007070707070707071
+Metric Coupling, Average ACS: 0.1111111111111111
+Metric Complexity, TCM: 91.80555555555556
+Metric Complexity, Average Halstead's metric (Difficulty): 10.41038172448895
+Metric Complexity, Average CC: 3.2427992287734395
+Metric Complexity, Average ICC: 0.4953352533019287
+Metric Granularity, Average NOO: 29.6
+Metric Granularity, Average NO nanoentities: 91.66666666666667
+Metric Granularity, Average LOC: 403.1777777777778
+Metric Granularity, Average SGM: 0.3925641111311794
+
+Service Name : admin-basic-info, Language : java
+Metric LCOM : 0.8979779411764706
+Metric LCOM4 : 1
+Metric LCOM5 : 0.2533333333333333
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 68
+Metric NO nanoentities : 187
+Metric LOC : 557
+Metric SGM : 0.09990662931839402
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 3.50215184275721
+Metric CC : 2.661764705882353
+Metric ICC : 0.5816876122082585
+
+Service Name : admin-order, Language : java
+Metric LCOM : 0.8333333333333334
+Metric LCOM4 : 1
+Metric LCOM5 : 0.2
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 20
+Metric NO nanoentities : 55
+Metric LOC : 281
+Metric SGM : 0.4222222222222222
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 8.35827234002967
+Metric CC : 2.9
+Metric ICC : 0.4483985765124555
+
+Service Name : admin-route, Language : java
+Metric LCOM : 0.8580246913580247
+Metric LCOM4 : 1
+Metric LCOM5 : 0.18333333333333335
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 18
+Metric NO nanoentities : 50
+Metric LOC : 234
+Metric SGM : 0.5416666666666665
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 8.055250737975458
+Metric CC : 3.388888888888889
+Metric ICC : 0.4444444444444444
+
+Service Name : admin-travel, Language : java
+Metric LCOM : 0.8784722222222222
+Metric LCOM4 : 1
+Metric LCOM5 : 0.2166666666666667
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 24
+Metric NO nanoentities : 90
+Metric LOC : 385
+Metric SGM : 0.42727272727272725
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 11.522261004359054
+Metric CC : 4.0
+Metric ICC : 0.5298701298701298
+
+Service Name : admin-user, Language : java
+Metric LCOM : 0.83125
+Metric LCOM4 : 1
+Metric LCOM5 : 0.2
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 20
+Metric NO nanoentities : 63
+Metric LOC : 257
+Metric SGM : 0.42727272727272725
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 8.654126255656868
+Metric CC : 3.05
+Metric ICC : 0.4280155642023346
+
+Service Name : assurance, Language : java
+Metric LCOM : 0.9015151515151515
+Metric LCOM4 : 4
+Metric LCOM5 : 0.28348214285714285
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 44
+Metric NO nanoentities : 98
+Metric LOC : 451
+Metric SGM : 0.2535714285714286
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 5.703635424098474
+Metric CC : 3.1136363636363638
+Metric ICC : 0.5875831485587583
+
+Service Name : auth, Language : java
+Metric LCOM : 0.9514705882352941
+Metric LCOM4 : 3
+Metric LCOM5 : 0.47222222222222227
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 40
+Metric NO nanoentities : 128
+Metric LOC : 608
+Metric SGM : 0.38461538461538464
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 7.5548581791203455
+Metric CC : 3.025
+Metric ICC : 0.3157894736842105
+
+Service Name : avatar, Language : py
+Metric LCOM : 0.6666666666666667
+Metric LCOM4 : 0
+Metric LCOM5 : 0.0
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 3
+Metric NO nanoentities : 29
+Metric LOC : 71
+Metric SGM : 1.0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 9.725546811467455
+Metric CC : 6.666666666666667
+Metric ICC : 0.704225352112676
+
+Service Name : basic, Language : java
+Metric LCOM : 0.8975
+Metric LCOM4 : 1
+Metric LCOM5 : 0.22424242424242422
+Metric ADS : 4
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 25
+Metric NO nanoentities : 128
+Metric LOC : 552
+Metric SGM : 0.5214285714285715
+Metric TCM : 2.25
+Metric ComF : 1.0
+Metric HM : 26.028243244034922
+Metric CC : 5.04
+Metric ICC : 0.5942028985507246
+
+Service Name : cancel, Language : java
+Metric LCOM : 0.8741258741258742
+Metric LCOM4 : 1
+Metric LCOM5 : 0.385
+Metric ADS : 3
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 22
+Metric NO nanoentities : 82
+Metric LOC : 441
+Metric SGM : 0.6666666666666665
+Metric TCM : 2.6666666666666665
+Metric ComF : 1.3333333333333333
+Metric HM : 14.775820177087558
+Metric CC : 3.8181818181818183
+Metric ICC : 0.42857142857142855
+
+Service Name : config, Language : java
+Metric LCOM : 0.8317307692307692
+Metric LCOM4 : 2
+Metric LCOM5 : 0.21904761904761902
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 26
+Metric NO nanoentities : 59
+Metric LOC : 288
+Metric SGM : 0.35000000000000003
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 3.5418276038546406
+Metric CC : 2.923076923076923
+Metric ICC : 0.4965277777777778
+
+Service Name : consign-price, Language : java
+Metric LCOM : 0.8974358974358975
+Metric LCOM4 : 1
+Metric LCOM5 : 0.3055555555555555
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 21
+Metric NO nanoentities : 57
+Metric LOC : 275
+Metric SGM : 0.41874999999999996
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 2.54372738248704
+Metric CC : 2.7142857142857144
+Metric ICC : 0.4618181818181818
+
+Service Name : consign, Language : java
+Metric LCOM : 0.8873626373626373
+Metric LCOM4 : 3
+Metric LCOM5 : 0.12142857142857144
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 28
+Metric NO nanoentities : 92
+Metric LOC : 378
+Metric SGM : 0.3402203856749311
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 13.136563852277183
+Metric CC : 2.857142857142857
+Metric ICC : 0.4444444444444444
+
+Service Name : contacts, Language : java
+Metric LCOM : 0.9215686274509804
+Metric LCOM4 : 2
+Metric LCOM5 : 0.3800705467372134
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 39
+Metric NO nanoentities : 85
+Metric LOC : 392
+Metric SGM : 0.2652714932126697
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 4.245587367827566
+Metric CC : 3.128205128205128
+Metric ICC : 0.5994897959183674
+
+Service Name : delivery, Language : java
+Metric LCOM : 0.8444444444444444
+Metric LCOM4 : 1
+Metric LCOM5 : 0.0
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 9
+Metric NO nanoentities : 30
+Metric LOC : 123
+Metric SGM : 0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 7.792365944710821
+Metric CC : 2.6666666666666665
+Metric ICC : 0.3008130081300813
+
+Service Name : execute, Language : java
+Metric LCOM : 0.8055555555555556
+Metric LCOM4 : 1
+Metric LCOM5 : 0.3666666666666667
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 18
+Metric NO nanoentities : 55
+Metric LOC : 278
+Metric SGM : 0.6666666666666667
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 7.125104625955114
+Metric CC : 4.055555555555555
+Metric ICC : 0.5431654676258992
+
+Service Name : food-delivery, Language : java
+Metric LCOM : 0.900952380952381
+Metric LCOM4 : 2
+Metric LCOM5 : 0.10267857142857142
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 35
+Metric NO nanoentities : 108
+Metric LOC : 434
+Metric SGM : 0.23391812865497075
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 8.029218946573277
+Metric CC : 3.1142857142857143
+Metric ICC : 0.49539170506912444
+
+Service Name : food, Language : java
+Metric LCOM : 0.9174964438122333
+Metric LCOM4 : 2
+Metric LCOM5 : 0.33875425170068024
+Metric ADS : 1
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 37
+Metric NO nanoentities : 119
+Metric LOC : 543
+Metric SGM : 0.22916666666666666
+Metric TCM : 11.0
+Metric ComF : 1.0
+Metric HM : 17.532671899962907
+Metric CC : 3.5405405405405403
+Metric ICC : 0.5616942909760589
+
+Service Name : gateway, Language : java
+Metric LCOM : 0.8333333333333334
+Metric LCOM4 : 0
+Metric LCOM5 : 0.5
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 6
+Metric NO nanoentities : 15
+Metric LOC : 85
+Metric SGM : 0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 0.0
+Metric CC : 2.5
+Metric ICC : 0.24705882352941178
+
+Service Name : inside-payment, Language : java
+Metric LCOM : 0.9362244897959183
+Metric LCOM4 : 4
+Metric LCOM5 : 0.21057692307692305
+Metric ADS : 1
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 56
+Metric NO nanoentities : 176
+Metric LOC : 804
+Metric SGM : 0.2333333333333333
+Metric TCM : 11.0
+Metric ComF : 1.0
+Metric HM : 16.099507241454116
+Metric CC : 3.1964285714285716
+Metric ICC : 0.47761194029850745
+
+Service Name : news, Language : go
+Metric LCOM : 0.6666666666666667
+Metric LCOM4 : 0
+Metric LCOM5 : 0.5
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 3
+Metric NO nanoentities : 5
+Metric LOC : 23
+Metric SGM : 0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 0.27155617367947116
+Metric CC : 2.6666666666666665
+Metric ICC : 0.4782608695652174
+
+Service Name : notification, Language : java
+Metric LCOM : 0.9296296296296296
+Metric LCOM4 : 2
+Metric LCOM5 : 0.18888888888888886
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 36
+Metric NO nanoentities : 140
+Metric LOC : 509
+Metric SGM : 0.3533834586466165
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 5.107034304046048
+Metric CC : 2.8333333333333335
+Metric ICC : 0.4636542239685658
+
+Service Name : order-other, Language : java
+Metric LCOM : 0.9356203007518797
+Metric LCOM4 : 3
+Metric LCOM5 : 0.5257716049382716
+Metric ADS : 1
+Metric AIS : 1
+Metric ACS : 1
+Metric NOO : 76
+Metric NO nanoentities : 199
+Metric LOC : 872
+Metric SGM : 0.125
+Metric TCM : 18.0
+Metric ComF : 1.0
+Metric HM : 5.809469366633165
+Metric CC : 3.3815789473684212
+Metric ICC : 0.7236238532110092
+
+Service Name : order, Language : java
+Metric LCOM : 0.9419680403700589
+Metric LCOM4 : 3
+Metric LCOM5 : 0.535199214365881
+Metric ADS : 1
+Metric AIS : 2
+Metric ACS : 2
+Metric NOO : 82
+Metric NO nanoentities : 213
+Metric LOC : 923
+Metric SGM : 0.125
+Metric TCM : 18.0
+Metric ComF : 1.0
+Metric HM : 5.669303767168163
+Metric CC : 3.341463414634146
+Metric ICC : 0.733477789815818
+
+Service Name : payment, Language : java
+Metric LCOM : 0.8826086956521739
+Metric LCOM4 : 2
+Metric LCOM5 : 0.24603174603174605
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 23
+Metric NO nanoentities : 56
+Metric LOC : 296
+Metric SGM : 0.5900000000000001
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 2.3560490398068654
+Metric CC : 2.652173913043478
+Metric ICC : 0.38513513513513514
+
+Service Name : preserve-other, Language : java
+Metric LCOM : 0.9342948717948718
+Metric LCOM4 : 1
+Metric LCOM5 : 0.33333333333333337
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 24
+Metric NO nanoentities : 101
+Metric LOC : 490
+Metric SGM : 1.3000000000000003
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 53.25622654891695
+Metric CC : 3.8333333333333335
+Metric ICC : 0.5346938775510204
+
+Service Name : preserve, Language : java
+Metric LCOM : 0.9342948717948718
+Metric LCOM4 : 2
+Metric LCOM5 : 0.33035714285714285
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 24
+Metric NO nanoentities : 101
+Metric LOC : 490
+Metric SGM : 1.3000000000000003
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 52.830939355411275
+Metric CC : 3.8333333333333335
+Metric ICC : 0.5346938775510204
+
+Service Name : price, Language : java
+Metric LCOM : 0.9108159392789373
+Metric LCOM4 : 2
+Metric LCOM5 : 0.353968253968254
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 31
+Metric NO nanoentities : 75
+Metric LOC : 411
+Metric SGM : 0.36666666666666664
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 3.6572784782654186
+Metric CC : 3.096774193548387
+Metric ICC : 0.635036496350365
+
+Service Name : rebook, Language : java
+Metric LCOM : 0.9216524216524217
+Metric LCOM4 : 1
+Metric LCOM5 : 0.36444444444444446
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 27
+Metric NO nanoentities : 126
+Metric LOC : 559
+Metric SGM : 0.7777777777777777
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 15.924959330434767
+Metric CC : 4.703703703703703
+Metric ICC : 0.5223613595706619
+
+Service Name : route-plan, Language : java
+Metric LCOM : 0.8523809523809524
+Metric LCOM4 : 1
+Metric LCOM5 : 0.3476190476190476
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 21
+Metric NO nanoentities : 104
+Metric LOC : 421
+Metric SGM : 0.5576923076923077
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 28.210464054149853
+Metric CC : 3.761904761904762
+Metric ICC : 0.5225653206650831
+
+Service Name : route, Language : java
+Metric LCOM : 0.9127134724857685
+Metric LCOM4 : 3
+Metric LCOM5 : 0.20952380952380953
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 31
+Metric NO nanoentities : 80
+Metric LOC : 425
+Metric SGM : 0.2976190476190476
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 5.762241460647177
+Metric CC : 3.064516129032258
+Metric ICC : 0.5764705882352941
+
+Service Name : seat, Language : java
+Metric LCOM : 0.8611111111111112
+Metric LCOM4 : 1
+Metric LCOM5 : 0.4
+Metric ADS : 1
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 16
+Metric NO nanoentities : 64
+Metric LOC : 298
+Metric SGM : 0.7777777777777777
+Metric TCM : 6.0
+Metric ComF : 2.0
+Metric HM : 19.066968095409592
+Metric CC : 3.5625
+Metric ICC : 0.42953020134228187
+
+Service Name : security, Language : java
+Metric LCOM : 0.8696969696969696
+Metric LCOM4 : 2
+Metric LCOM5 : 0.2346938775510204
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 30
+Metric NO nanoentities : 84
+Metric LOC : 343
+Metric SGM : 0.35000000000000003
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 7.100585718752413
+Metric CC : 2.9
+Metric ICC : 0.5014577259475219
+
+Service Name : station-food, Language : java
+Metric LCOM : 0.9107142857142857
+Metric LCOM4 : 4
+Metric LCOM5 : 0.44642857142857145
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 28
+Metric NO nanoentities : 69
+Metric LOC : 327
+Metric SGM : 0.3875
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 6.638129431811898
+Metric CC : 3.0714285714285716
+Metric ICC : 0.4954128440366973
+
+Service Name : station, Language : java
+Metric LCOM : 0.9110105580693816
+Metric LCOM4 : 3
+Metric LCOM5 : 0.296875
+Metric ADS : 0
+Metric AIS : 3
+Metric ACS : 0
+Metric NOO : 39
+Metric NO nanoentities : 82
+Metric LOC : 422
+Metric SGM : 0.23015873015873015
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 3.2185397182386355
+Metric CC : 3.128205128205128
+Metric ICC : 0.6611374407582938
+
+Service Name : ticket-office, Language : java
+Metric LCOM : 0
+Metric LCOM4 : 0
+Metric LCOM5 : 0
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 0
+Metric NO nanoentities : 0
+Metric LOC : 0
+Metric SGM : 0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 0
+Metric CC : 0
+Metric ICC : 0
+
+Service Name : train-food, Language : java
+Metric LCOM : 0.8835978835978836
+Metric LCOM4 : 3
+Metric LCOM5 : 0.5
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 21
+Metric NO nanoentities : 54
+Metric LOC : 274
+Metric SGM : 0.6666666666666666
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 5.83943389293682
+Metric CC : 2.9523809523809526
+Metric ICC : 0.4233576642335766
+
+Service Name : train, Language : java
+Metric LCOM : 0.8575757575757575
+Metric LCOM4 : 2
+Metric LCOM5 : 0.32142857142857145
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 33
+Metric NO nanoentities : 75
+Metric LOC : 404
+Metric SGM : 0.2991071428571429
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 4.031659761366077
+Metric CC : 3.212121212121212
+Metric ICC : 0.5792079207920792
+
+Service Name : travel-plan, Language : java
+Metric LCOM : 0.9027777777777778
+Metric LCOM4 : 1
+Metric LCOM5 : 0.2856060606060606
+Metric ADS : 1
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 28
+Metric NO nanoentities : 103
+Metric LOC : 468
+Metric SGM : 0.43529411764705883
+Metric TCM : 7.0
+Metric ComF : 1.0
+Metric HM : 18.21819411740021
+Metric CC : 3.0714285714285716
+Metric ICC : 0.4807692307692308
+
+Service Name : travel, Language : java
+Metric LCOM : 0.9378531073446328
+Metric LCOM4 : 3
+Metric LCOM5 : 0.20294784580498867
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 59
+Metric NO nanoentities : 214
+Metric LOC : 886
+Metric SGM : 0.1596720250296688
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 12.392667123087591
+Metric CC : 3.7457627118644066
+Metric ICC : 0.6241534988713319
+
+Service Name : travel2, Language : java
+Metric LCOM : 0.9390029325513196
+Metric LCOM4 : 3
+Metric LCOM5 : 0.3563454089769879
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 55
+Metric NO nanoentities : 191
+Metric LOC : 800
+Metric SGM : 0.17328042328042323
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 12.514911438863058
+Metric CC : 3.6545454545454548
+Metric ICC : 0.6275
+
+Service Name : user, Language : java
+Metric LCOM : 0.9017094017094017
+Metric LCOM4 : 1
+Metric LCOM5 : 0.2942708333333333
+Metric ADS : 1
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 36
+Metric NO nanoentities : 105
+Metric LOC : 449
+Metric SGM : 0.3036963036963037
+Metric TCM : 9.0
+Metric ComF : 1.0
+Metric HM : 8.748877926322681
+Metric CC : 3.0833333333333335
+Metric ICC : 0.4521158129175947
+
+Service Name : verifiation-code, Language : java
+Metric LCOM : 0
+Metric LCOM4 : 0
+Metric LCOM5 : 0
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 0
+Metric NO nanoentities : 0
+Metric LOC : 0
+Metric SGM : 0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 0
+Metric CC : 0
+Metric ICC : 0
+
+Service Name : voucher, Language : py
+Metric LCOM : 0.6666666666666667
+Metric LCOM4 : 1
+Metric LCOM5 : 1
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 6
+Metric NO nanoentities : 60
+Metric LOC : 129
+Metric SGM : 0.0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 4.521245873386979
+Metric CC : 4.833333333333333
+Metric ICC : 0.7054263565891473
+
+Service Name : wait-order, Language : java
+Metric LCOM : 0.9545454545454546
+Metric LCOM4 : 2
+Metric LCOM5 : 0.7258333333333333
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 44
+Metric NO nanoentities : 118
+Metric LOC : 487
+Metric SGM : 0.6071428571428571
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 3.3937017435779526
+Metric CC : 3.1818181818181817
+Metric ICC : 0.5092402464065708
+
+
+[Done] exited with code=0 in 7.157 seconds
+

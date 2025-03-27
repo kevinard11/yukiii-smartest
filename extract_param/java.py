@@ -86,7 +86,7 @@ def count_lines_of_code(file_path):
     return total_loc, effective_loc
 
 def _parse_content(file_path) -> any:
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         file_contents = f.read()
 
     return file_contents
@@ -447,6 +447,8 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                 var_name = declarator.name
                                 initializer = declarator.initializer
 
+                                # print(var_name, initializer)
+
                                 if isinstance(initializer, javalang.tree.This):
                                     initializer = initializer.selectors[0]
 
@@ -485,8 +487,8 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                                 arg = arg.selectors[0]
                                             if isinstance(arg, javalang.tree.MemberReference):
                                                 method_args.append(arg.member)
-                                            # elif isinstance(arg, javalang.tree.BinaryOperation):
-                                            #     method_args(get_BinOp(arg))
+                                            elif isinstance(arg, javalang.tree.BinaryOperation):
+                                                method_args.append(get_BinOp(arg))
                                             elif isinstance(arg, javalang.tree.Literal):
                                                 method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
                                             elif isinstance(arg, javalang.tree.ClassReference):
@@ -572,8 +574,8 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
                                                         method_args.append(arg.type.name+".class")
                                                     elif isinstance(arg, javalang.tree.MemberReference):
                                                         method_args.append(arg.member)
-                                                    # elif isinstance(arg, javalang.tree.BinaryOperation):
-                                                    #     method_args(get_BinOp(initializer))
+                                                    elif isinstance(arg, javalang.tree.BinaryOperation):
+                                                        method_args.append(get_BinOp(initializer))
                                                     elif isinstance(arg, javalang.tree.Literal):
                                                         method_args.append(str(arg.value if hasattr(arg, 'value') else arg))
                                                     elif isinstance(arg, javalang.tree.ClassReference):

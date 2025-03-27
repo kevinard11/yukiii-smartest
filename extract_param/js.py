@@ -81,7 +81,7 @@ def count_lines_of_code(file_path):
     return total_loc, effective_loc
 
 def _parse_content(file_path) -> any:
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         file_contents = f.read()
 
     return file_contents

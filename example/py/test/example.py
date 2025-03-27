@@ -75,22 +75,22 @@
 # def baz():
 #     # intentionally put no space above this def
 #     print("world %s" % globalList)
-class Publisher:
-    HOST = os.getenv('AMQP_HOST', 'rabbitmq')
-    VIRTUAL_HOST = '/'
-    EXCHANGE='robot-shop'
-    TYPE='direct'
-    ROUTING_KEY = 'orders'
+# class Publisher:
+#     HOST = os.getenv('AMQP_HOST', 'rabbitmq')
+#     VIRTUAL_HOST = '/'
+#     EXCHANGE='robot-shop'
+#     TYPE='direct'
+#     ROUTING_KEY = 'orders'
 
-    def _publish(self, msg, headers):
-        self._channel.basic_publish(exchange=self.EXCHANGE,
-                                    routing_key=self.ROUTING_KEY,
-                                    properties=pika.BasicProperties(headers=headers),
-                                    body=json.dumps(msg).encode())
-        self._logger.info('message sent')
-def test(s):
-    req = requests.get('http://{user}:8080/check/{id}'.format(user='user', id=id))
-    publisher._publish(order, headers)
+#     def _publish(self, msg, headers):
+#         self._channel.basic_publish(exchange=self.EXCHANGE,
+#                                     routing_key=self.ROUTING_KEY,
+#                                     properties=pika.BasicProperties(headers=headers),
+#                                     body=json.dumps(msg).encode())
+#         self._logger.info('message sent')
+# def test(s):
+#     req = requests.get('http://{user}:8080/check/{id}'.format(user='user', id=id))
+#     publisher._publish(order, headers)
 
 # def health():
 #     return 'OK'
@@ -203,23 +203,44 @@ def test(s):
 # producer.close()
 
 # Prometheus
-@app.route('/metrics', methods=['POST'])
-def metrics():
-    res = []
-    for m in PromMetrics.values():
-        res.append(prometheus_client.generate_latest(m))
+# @app.route('/metrics', methods=['POST'])
+# def metrics():
+#     res = []
+#     for m in PromMetrics.values():
+#         res.append(prometheus_client.generate_latest(m))
 
-    return Response(res, mimetype='text/plain')
+#     return Response(res, mimetype='text/plain')
 
-def queueOrder(order):
-    app.logger.info('queue order')
+# def queueOrder(order):
+#     app.logger.info('queue order')
 
-    # For screenshot demo requirements optionally add in a bit of delay
-    delay = int(os.getenv('PAYMENT_DELAY_MS', 0))
-    time.sleep(delay / 1000)
+#     # For screenshot demo requirements optionally add in a bit of delay
+#     delay = int(os.getenv('PAYMENT_DELAY_MS', 0))
+#     time.sleep(delay / 1000)
 
-    headers = {}
-    publisher._publish(order, headers)
+#     headers = {}
+#     publisher._publish(order, headers)
+
+def hello():
+    # receive file
+    data = request.get_data().decode('utf-8')
+    data = json.loads(data)
+    image_b64 = data.get("img")
+    if image_b64 is None or len(image_b64) < 1:
+        return jsonify({"msg": "need img in request body"}), 400
+
+    try:
+        image_decode = base64.b64decode(image_b64)
+        nparr = np.fromstring(image_decode, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        result = check(image)
+    except Exception as e:
+        return jsonify({"msg": "exception:" + str(traceback.format_exc())}), 500
+
+    if type(result) == dict and result.get("msg") is not None:
+        return jsonify(result), 400
+
+    return result, 200
 
 
 

@@ -1,9 +1,8 @@
-import re
 import os
 import json
 import ast
 import astor
-from typing import Dict, Tuple, List
+from typing import Tuple, List
 
 class GlobalVariableVisitor(ast.NodeVisitor):
     def __init__(self):
@@ -267,7 +266,9 @@ class GlobalVariableVisitor(ast.NodeVisitor):
         return_types= []
         for sub_node in ast.walk(node):  # Menelusuri seluruh node dalam fungsi
             if isinstance(sub_node, ast.Return) and sub_node.value is not None:
-                return_values = list(self.get_value(sub_node.value))
+                return_values = self.get_value(sub_node.value)
+                if return_values:
+                    return_values = list(self.get_value(sub_node.value))
                 return_type = self.get_type_value(sub_node.value)
 
                 if isinstance(return_type, Tuple):
@@ -380,34 +381,36 @@ class GlobalVariableVisitor(ast.NodeVisitor):
 
     def get_type_value(self, node):
 
-        if isinstance(node, ast.Str):  # Python < 3.8 String
+        if isinstance(node, ast.Str):
             type_of = 'str'
-        elif isinstance(node, ast.Num):  # Python < 3.8 Angka
+        elif isinstance(node, ast.Num):
             type_of = 'int'
-        elif isinstance(node, ast.NameConstant):  # Python < 3.8 Boolean/None
+        elif isinstance(node, ast.NameConstant):
             type_of = 'bool' if node else ''
-        elif isinstance(node, ast.List):  # List []
+        elif isinstance(node, ast.List):
             type_of = [self.get_type_value(elt) for elt in node.elts]
             return type_of
-        elif isinstance(node, ast.Dict):  # Dictionary {}
-            type_of = {self.get_value(k): type(self.get_type_value(v)) for k, v in zip(node.keys, node.values)}
+        elif isinstance(node, ast.Dict):
+            type_of = {self.get_value(k): self.get_type_value(v) for k, v in zip(node.keys, node.values)}
             return type_of
-        elif isinstance(node, ast.Tuple):  # Tuple ())
+        elif isinstance(node, ast.Tuple):
             type_of = tuple(self.get_type_value(elt) for elt in node.elts)
             return type_of
-        elif isinstance(node, ast.Name):  # Variabel lain
-            # print(type(self.global_func[self.current_function]['local_vars'][node.id]))
-            type_return = type(self.global_func[self.current_function]['local_vars'][node.id]) if node.id in self.global_func[self.current_function]['local_vars'].keys() else type('str')
+        elif isinstance(node, ast.Name):
+            type_return = type(self.global_func[self.current_function]['local_vars'][node.id]) if self.current_function in self.global_func and node.id in self.global_func[self.current_function]['local_vars'].keys() else type('str')
             type_of = type_return.__name__
-        elif isinstance(node, ast.BinOp):  # Operasi seperti 5 + 3
+        elif isinstance(node, ast.BinOp):
             type_of = f"({self.get_type_value(self.get_value_BinOp(node.left))} {self.get_type_value(self.get_operator_BinOp(node.op))} {self.get_type_value(self.get_value_BinOp(node.right))})"
-        elif isinstance(node, ast.Call):  # Panggilan fungsi seperti func()
+        elif isinstance(node, ast.Call):
             arguments = []
             # if node.args:
             #     for arg in node.args:
             #         arguments.append(self.get_type_value(arg))
             # print(node.func.id, node.args[0].s)
-            type_of = self.get_type_value(node.args[0])
+            type_of = 'method'
+
+            if node.args:
+                type_of = self.get_type_value(node.args[0])
             return type_of
         else:
             type_of = "Unknown Type"
@@ -418,15 +421,15 @@ class GlobalVariableVisitor(ast.NodeVisitor):
 
     def get_value_BinOp(self, node):
         """Mengambil nilai dari operand kiri atau kanan"""
-        if isinstance(node, ast.Str):  # Python < 3.8 String
+        if isinstance(node, ast.Str):
             return node.s
-        elif isinstance(node, ast.Num):  # Python < 3.8 Angka
+        elif isinstance(node, ast.Num):
             return node.n
-        elif isinstance(node, ast.NameConstant):  # Python < 3.8 Boolean/None
+        elif isinstance(node, ast.NameConstant):
             return node.value
-        elif isinstance(node, ast.Name):  # Variabel seperti 'a'
+        elif isinstance(node, ast.Name):
             return node.id
-        elif isinstance(node, ast.BinOp):  # Operasi dalam operasi (nested)
+        elif isinstance(node, ast.BinOp):
             return f"({self.get_value_BinOp(node.left)} {self.get_operator_BinOp(node.op)} {self.get_value_BinOp(node.right)})"
         return "Unknown"
 
@@ -509,23 +512,27 @@ class FunctionCallVisitor(ast.NodeVisitor):
 
     def visit_Expr(self, node):
         """Mendeteksi ekspresi metode yang dipanggil tanpa assignment"""
-        if isinstance(node.value, ast.Call):
-            method_data = self.extract_method_data(node.value)
-            if self.current_def and self.current_function:
-                self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
-            elif self.current_function:
-                self.global_func[f"{self.current_function}"]['called_methods'].append(method_data)
-            else:
-                self.global_vars['called_methods'].append(method_data)
-        elif isinstance(node.value, ast.Await) or isinstance(node.value, ast.AsyncWith) :
-            node1 = node.value
-            if isinstance(node1.value, ast.Call):
-                method_data = self.extract_method_data(node1.value)
-
+        if self.current_def:
+            if isinstance(node.value, ast.Call):
+                method_data = self.extract_method_data(node.value)
                 if self.current_def and self.current_function:
-                    self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                    if f"{self.current_def}.{self.current_function}" in self.global_func:
+                        self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                    else:
+                        self.global_func[f"{self.current_def}.{self.current_function}"] = {'called_methods': [method_data]}
                 elif self.current_function:
-                    self.global_func[self.current_function]['called_methods'].append(method_data)
+                    self.global_func[f"{self.current_function}"]['called_methods'].append(method_data)
+                else:
+                    self.global_vars['called_methods'].append(method_data)
+            elif isinstance(node.value, ast.Await) or isinstance(node.value, ast.AsyncWith) :
+                node1 = node.value
+                if isinstance(node1.value, ast.Call):
+                    method_data = self.extract_method_data(node1.value)
+
+                    if self.current_def and self.current_function:
+                        self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                    elif self.current_function:
+                        self.global_func[self.current_function]['called_methods'].append(method_data)
 
         # elif isinstance(node.va)
         self.generic_visit(node)
@@ -534,17 +541,23 @@ class FunctionCallVisitor(ast.NodeVisitor):
         """Mendeteksi variabel yang dideklarasikan di tingkat global"""
         for target in node.targets:
             if isinstance(target, ast.Name):  # Hanya ambil variabel (bukan atribut obj.property)
+                # print(target, self.current_def, self.current_function)
                 if self.current_def and self.current_function:
-                    self.global_vars[f"{self.current_def}.{target.id}"] = self.get_value(node.value)
+                    # self.global_vars[f"{self.current_def}.{target.id}"] = self.get_value(node.value)
+                    self.functions[f"{self.current_def}.{self.current_function}"]['local_vars'].update({target.id: self.get_value(node.value)})
                 elif self.current_def and not self.current_function:
                     self.global_vars[f"{self.current_def}.{target.id}"] = self.get_value(node.value)
                 elif not self.current_function:
                     self.global_vars[target.id] = self.get_value(node.value)
                 else:
-                    if self.current_def and self.current_function:
-                        self.global_func[f"{self.current_def}.{self.current_function}"]['local_vars'].update({target.id : self.get_value(node.value)})
-                    elif self.current_function:
-                        self.global_func[self.current_function]['local_vars'].update({target.id : self.get_value(node.value)})
+                    if self.current_def:
+                        if self.current_def and self.current_function:
+                            self.functions[f"{self.current_def}.{self.current_function}"]['local_vars'].update({target.id : self.get_value(node.value)})
+                        elif self.current_function:
+                            if self.global_func[self.current_function]['local_vars']:
+                                self.global_func[self.current_function]['local_vars'].update({target.id : self.get_value(node.value)})
+                            else:
+                                self.global_func[self.current_function]['local_vars'] = {target.id : self.get_value(node.value)}
 
                 if isinstance(node.value, ast.Await) or isinstance(node.value, ast.AsyncWith) :
                     node1 = node.value
@@ -561,11 +574,14 @@ class FunctionCallVisitor(ast.NodeVisitor):
             if isinstance(node.value, ast.Call):
                 method_data = self.extract_method_data(node.value)
                 method_data["assigned_to"] = self.get_value(target)  # Ambil nama variabel yang menerima hasil
-
-                if self.current_def and self.current_function:
-                    self.global_func[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
-                elif self.current_function:
-                    self.global_func[self.current_function]['called_methods'].append(method_data)
+                if self.current_def:
+                    if self.current_def and self.current_function:
+                        if 'called_methods' in self.functions[f"{self.current_def}.{self.current_function}"]:
+                            self.functions[f"{self.current_def}.{self.current_function}"]['called_methods'].append(method_data)
+                        else:
+                            self.functions[f"{self.current_def}.{self.current_function}"].update({'called_methods': [method_data]})
+                    elif self.current_function:
+                        self.global_func[self.current_function]['called_methods'].append(method_data)
 
 
         self.generic_visit(node)
@@ -816,6 +832,7 @@ class FunctionCallVisitor(ast.NodeVisitor):
         - Called methods
         """
         class_name = self.get_class_name(node)
+        self.current_function = node.name
         if class_name and self.current_def:
             func_path = f"{self.current_def}.{class_name}"
 
@@ -853,10 +870,19 @@ class FunctionCallVisitor(ast.NodeVisitor):
             # Simpan hasil analisis function
             self.functions[func_path] = {
                 "local_vars": {"Parameter": parameters, "Http_method": http_method, **local_vars},
-                "called_method": called_methods
+                "called_methods": called_methods
             }
 
         self.generic_visit(node)
+
+    def visit_ClassDef(self, node):
+        """
+        Mengunjungi setiap definisi class dan mencari variabel di dalamnya.
+        """
+        self.current_def = node.name
+
+        self.generic_visit(node)
+        self.current_def = None
 
     def visit_route(self, node):
         for decorator in node.decorator_list:
@@ -905,7 +931,7 @@ class FunctionCallVisitor(ast.NodeVisitor):
         # return_type = self.get_annotation(node.returns)  # Ambil tipe return jika ada
         # return_values = self.get_return_values(node)  # Ambil return values dalam fungsi
         path = f"{self.current_def}.{self.current_function}" if self.current_def else self.current_function
-        self.global_func[path] = {
+        self.functions[path] = {
             'local_vars': local_vars,
             'called_methods': []
         }
@@ -1246,7 +1272,8 @@ def count_lines_of_code(file_path):
     return total_loc, effective_loc
 
 def _parse_content(file_path) -> any:
-    with open(file_path, "r") as f:
+    # print(file_path)
+    with open(file_path, "r", encoding="utf-8") as f:
         file_contents = f.read()
 
     return file_contents
@@ -1300,6 +1327,7 @@ def _parse_function_variable(tree_contents) -> Tuple[dict, dict]:
     return variable_func
 
 # tree_contents = _extract_from_dir("./example/py/test", _parse_tree_content, "py")
+# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//train-ticket//ts-avatar-service", _parse_tree_content, "py")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
