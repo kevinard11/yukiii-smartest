@@ -8,7 +8,8 @@ def main():
 
     # Create microservices
     mss = microservices.Microservices(config)
-    
+    print(mss.graph.edges())
+
     mss.print()
     for ms in mss.services:
         ms.print()

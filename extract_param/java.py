@@ -70,22 +70,20 @@ def count_lines_of_code(file_path):
             in_block_comment = True
         if block_end and stripped.endswith(block_end):
             in_block_comment = False
-            continue  # Lewati baris ini
+            continue 
 
-        # Lewati jika sedang dalam blok komentar
         if in_block_comment:
             continue
 
-        # Abaikan komentar satu baris
         if single_comment and stripped.startswith(single_comment):
             continue
 
-        # Tambahkan hanya jika baris ini adalah baris kode
         effective_loc += 1
 
     return total_loc, effective_loc
 
 def _parse_content(file_path) -> any:
+    # print(file_path)
     with open(file_path, "r", encoding="utf-8") as f:
         file_contents = f.read()
 
@@ -104,7 +102,7 @@ def _parse_tree_package(tree_contents) -> str:
     return tree_contents.package.name
 
 def _parse_content_yaml(file_path) -> any:
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         # config = yaml.safe_load(file)
         configs = list(yaml.safe_load_all(file))
 

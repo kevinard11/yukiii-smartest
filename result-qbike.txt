@@ -1,0 +1,88 @@
+[Running] python -u "c:\Users\ARD\Desktop\yukiii-smartest\main.py"
+Microservice Name: qbike
+Metric Cohesion, ALCOM: 0.8414673961548962
+Metric Cohesion, Average LCOM4: 3.5
+Metric Cohesion, Average LCOM5: 0.3562599206349206
+Metric Coupling, ADCS: 0.5
+Metric Coupling, SCF: 0.16666666666666666
+Metric Coupling, Average ACS: 0.0
+Metric Complexity, TCM: 3.5
+Metric Complexity, Average Halstead's metric (Difficulty): 9.444619409826563
+Metric Complexity, Average CC: 3.016422672672673
+Metric Complexity, Average ICC: 0.3028757449929146
+Metric Granularity, Average NOO: 24.25
+Metric Granularity, Average NO nanoentities: 150.5
+Metric Granularity, Average LOC: 478.0
+Metric Granularity, Average SGM: 0.6125
+
+Service Name : intention, Language : java
+Metric LCOM : 0.9607371794871795
+Metric LCOM4 : 6
+Metric LCOM5 : 0.6283730158730159
+Metric ADS : 2
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 48
+Metric NO nanoentities : 228
+Metric LOC : 781
+Metric SGM : 0.45
+Metric TCM : 3.5
+Metric ComF : 1.0
+Metric HM : 8.495202134213473
+Metric CC : 3.7083333333333335
+Metric ICC : 0.44046094750320103
+
+Service Name : order, Language : java
+Metric LCOM : 0.9606879606879607
+Metric LCOM4 : 6
+Metric LCOM5 : 0.41666666666666663
+Metric ADS : 0
+Metric AIS : 0
+Metric ACS : 0
+Metric NOO : 37
+Metric NO nanoentities : 195
+Metric LOC : 753
+Metric SGM : 1.0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 2.450708243567781
+Metric CC : 3.135135135135135
+Metric ICC : 0.3280212483399734
+
+Service Name : position, Language : java
+Metric LCOM : 0.7777777777777778
+Metric LCOM4 : 2
+Metric LCOM5 : 0.38
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 9
+Metric NO nanoentities : 103
+Metric LOC : 232
+Metric SGM : 1.0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 10.514360497512003
+Metric CC : 2.888888888888889
+Metric ICC : 0.30603448275862066
+
+Service Name : uc, Language : java
+Metric LCOM : 0.6666666666666667
+Metric LCOM4 : 0
+Metric LCOM5 : 0.0
+Metric ADS : 0
+Metric AIS : 1
+Metric ACS : 0
+Metric NOO : 3
+Metric NO nanoentities : 76
+Metric LOC : 146
+Metric SGM : 0
+Metric TCM : 0
+Metric ComF : 0
+Metric HM : 16.318206764012995
+Metric CC : 2.3333333333333335
+Metric ICC : 0.136986301369863
+
+
+[Done] exited with code=0 in 3.066 seconds
+
