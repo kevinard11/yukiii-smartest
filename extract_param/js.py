@@ -13,19 +13,20 @@ def _extract_from_dir(dir_path, parser, lang) -> dict:
             if filename.endswith(f".{lang}"):
 
                 file_path = os.path.join(dirpath, filename)
-                file_content = parser(file_path)
-                # package = _parse_tree_package(file_content)
-                package = dirpath.replace('./','').replace('/','.').replace('\\', '.').replace('..','.').replace(':','')
+                if 'node_modules' not in file_path:
+                    file_content = parser(file_path)
+                    # package = _parse_tree_package(file_content)
+                    package = dirpath.replace('./','').replace('/','.').replace('\\', '.').replace('..','.').replace(':','')
 
-                if package:
-                    key = package + "." + filename.replace(f".{lang}", "")
-                else:
-                    key = file_path
+                    if package:
+                        key = package + "." + filename.replace(f".{lang}", "")
+                    else:
+                        key = file_path
 
-                total_loc, effective_loc = count_lines_of_code(file_path)
-                loc = loc + effective_loc
+                    total_loc, effective_loc = count_lines_of_code(file_path)
+                    loc = loc + effective_loc
 
-                contents[key] = file_content
+                    contents[key] = file_content
 
     contents['loc'] = loc
     return contents

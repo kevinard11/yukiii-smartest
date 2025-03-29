@@ -1,42 +1,42 @@
 [Running] python -u "c:\Users\ARD\Desktop\yukiii-smartest\main.py"
 [('spica-rule-agentalteration', 'agent-management'), ('agent-management', 'compensation-calculation'), ('agent-management', 'generic-service'), ('agent-management', 'onboarding'), ('agent-management', 'spica-rule-agentalteration'), ('compensation-calculation', 'generic-service'), ('compensation-calculation', 'spica-rule'), ('spica-rule', 'compensation-calculation'), ('spica-rule', 'onboarding'), ('spica-rule', 'orion-assistance'), ('onboarding', 'spica-rule')]
 Microservice Name: andromeda
-Metric Cohesion, ALCOM: 0.9909824276273785
-Metric Cohesion, Average LCOM4: 26.0
-Metric Cohesion, Average LCOM5: 0.18996108766456105
+Metric Cohesion, ALCOM: 0.9910080570983233
+Metric Cohesion, Average LCOM4: 26.818181818181817
+Metric Cohesion, Average LCOM5: 0.8879262495990097
 Metric Coupling, ADCS: 1.0
 Metric Coupling, SCF: 0.1
 Metric Coupling, Average ACS: 2.6363636363636362
 Metric Complexity, TCM: 601.7083333333333
-Metric Complexity, Average Halstead's metric (Difficulty): 16.116131001146055
-Metric Complexity, Average CC: 2.8934540600258125
-Metric Complexity, Average ICC: 0.37552437997664007
-Metric Granularity, Average NOO: 626.6363636363636
-Metric Granularity, Average NO nanoentities: 2300.5454545454545
-Metric Granularity, Average LOC: 8520.545454545454
+Metric Complexity, Average Halstead's metric (Difficulty): 16.1534530554177
+Metric Complexity, Average CC: 2.902453267068893
+Metric Complexity, Average ICC: 0.37683312946967695
+Metric Granularity, Average NOO: 628.2727272727273
+Metric Granularity, Average NO nanoentities: 2303.818181818182
+Metric Granularity, Average LOC: 8561.636363636364
 Metric Granularity, Average SGM: 0.09265299177470206
 
 Service Name : agent-management, Language : java
-Metric LCOM : 0.9980088830948338
-Metric LCOM4 : 48
-Metric LCOM5 : 0.1699166241940505
+Metric LCOM : 0.9980065849720455
+Metric LCOM4 : 53
+Metric LCOM5 : 0.9196057825041265
 Metric ADS : 4
 Metric AIS : 1
 Metric ACS : 4
-Metric NOO : 2170
-Metric NO nanoentities : 6617
-Metric LOC : 25100
+Metric NOO : 2184
+Metric NO nanoentities : 6645
+Metric LOC : 25477
 Metric SGM : 0.012458224669178005
 Metric TCM : 38.25
 Metric ComF : 1.5
-Metric HM : 12.002893483508215
-Metric CC : 2.595852534562212
-Metric ICC : 0.4269322709163347
+Metric HM : 12.02526193055089
+Metric CC : 2.614010989010989
+Metric ICC : 0.4300349334694038
 
 Service Name : bc-management, Language : java
 Metric LCOM : 0.9920003509900845
 Metric LCOM4 : 13
-Metric LCOM5 : 0.23556608844957821
+Metric LCOM5 : 0.9341962254358797
 Metric ADS : 0
 Metric AIS : 0
 Metric ACS : 0
@@ -53,7 +53,7 @@ Metric ICC : 0.3506844380403458
 Service Name : compensation-calculation, Language : java
 Metric LCOM : 0.9972455807450314
 Metric LCOM4 : 43
-Metric LCOM5 : 0.1683212557434289
+Metric LCOM5 : 0.9695260750205373
 Metric ADS : 2
 Metric AIS : 2
 Metric ACS : 4
@@ -70,7 +70,7 @@ Metric ICC : 0.47660281122116127
 Service Name : data-administration, Language : java
 Metric LCOM : 0.9883039008961518
 Metric LCOM4 : 39
-Metric LCOM5 : 0.17349726775956284
+Metric LCOM5 : 0.7308743169398906
 Metric ADS : 0
 Metric AIS : 0
 Metric ACS : 0
@@ -87,7 +87,7 @@ Metric ICC : 0.3573487031700288
 Service Name : generic-service, Language : java
 Metric LCOM : 0.9883133881824981
 Metric LCOM4 : 14
-Metric LCOM5 : 0.2307650682650683
+Metric LCOM5 : 0.897431734931735
 Metric ADS : 0
 Metric AIS : 2
 Metric ACS : 0
@@ -102,26 +102,26 @@ Metric CC : 2.994764397905759
 Metric ICC : 0.3606231355651309
 
 Service Name : internal-sales, Language : java
-Metric LCOM : 0.9772518803889194
-Metric LCOM4 : 7
-Metric LCOM5 : 0.0795424482924483
+Metric LCOM : 0.977536102692102
+Metric LCOM4 : 11
+Metric LCOM5 : 0.8981302179962894
 Metric ADS : 0
 Metric AIS : 0
 Metric ACS : 0
-Metric NOO : 138
-Metric NO nanoentities : 706
-Metric LOC : 2215
+Metric NOO : 142
+Metric NO nanoentities : 714
+Metric LOC : 2290
 Metric SGM : 0.1877687529861443
 Metric TCM : 0
 Metric ComF : 0
-Metric HM : 2.498228102621892
-Metric CC : 2.630434782608696
-Metric ICC : 0.37516930022573364
+Metric HM : 2.8864022525673274
+Metric CC : 2.711267605633803
+Metric ICC : 0.3864628820960699
 
 Service Name : onboarding, Language : java
 Metric LCOM : 0.9966658258977835
 Metric LCOM4 : 30
-Metric LCOM5 : 0.15271018213061455
+Metric LCOM5 : 0.9045349996488626
 Metric ADS : 1
 Metric AIS : 2
 Metric ACS : 2
@@ -138,7 +138,7 @@ Metric ICC : 0.38904474680880907
 Service Name : orion-assistance, Language : java
 Metric LCOM : 0.9926533921061965
 Metric LCOM4 : 15
-Metric LCOM5 : 0.23134022543113453
+Metric LCOM5 : 0.8858856799765891
 Metric ADS : 0
 Metric AIS : 1
 Metric ACS : 0
@@ -155,7 +155,7 @@ Metric ICC : 0.3211554800339847
 Service Name : spica-rule, Language : java
 Metric LCOM : 0.9937802645312527
 Metric LCOM4 : 20
-Metric LCOM5 : 0.18987405442181501
+Metric LCOM5 : 0.9398740544218152
 Metric ADS : 3
 Metric AIS : 2
 Metric ACS : 6
@@ -172,7 +172,7 @@ Metric ICC : 0.3890374331550802
 Service Name : spica-rule-agentalteration, Language : java
 Metric LCOM : 0.990188679245283
 Metric LCOM4 : 17
-Metric LCOM5 : 0.23179271787643882
+Metric LCOM5 : 0.9408836269673478
 Metric ADS : 1
 Metric AIS : 1
 Metric ACS : 1
@@ -189,7 +189,7 @@ Metric ICC : 0.35007440476190477
 Service Name : user-management, Language : java
 Metric LCOM : 0.9863945578231292
 Metric LCOM4 : 40
-Metric LCOM5 : 0.22624603174603178
+Metric LCOM5 : 0.7462460317460318
 Metric ADS : 0
 Metric AIS : 0
 Metric ACS : 0
@@ -204,5 +204,5 @@ Metric CC : 2.894977168949772
 Metric ICC : 0.334095455844527
 
 
-[Done] exited with code=0 in 306.61 seconds
+[Done] exited with code=0 in 182.934 seconds
 

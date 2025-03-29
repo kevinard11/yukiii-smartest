@@ -1,8 +1,9 @@
 [Running] python -u "c:\Users\ARD\Desktop\yukiii-smartest\main.py"
+[('intention', 'position'), ('intention', 'uc')]
 Microservice Name: qbike
 Metric Cohesion, ALCOM: 0.8414673961548962
 Metric Cohesion, Average LCOM4: 3.5
-Metric Cohesion, Average LCOM5: 0.3562599206349206
+Metric Cohesion, Average LCOM5: 0.9021078431372549
 Metric Coupling, ADCS: 0.5
 Metric Coupling, SCF: 0.16666666666666666
 Metric Coupling, Average ACS: 0.0
@@ -18,7 +19,7 @@ Metric Granularity, Average SGM: 0.6125
 Service Name : intention, Language : java
 Metric LCOM : 0.9607371794871795
 Metric LCOM4 : 6
-Metric LCOM5 : 0.6283730158730159
+Metric LCOM5 : 1
 Metric ADS : 2
 Metric AIS : 0
 Metric ACS : 0
@@ -35,7 +36,7 @@ Metric ICC : 0.44046094750320103
 Service Name : order, Language : java
 Metric LCOM : 0.9606879606879607
 Metric LCOM4 : 6
-Metric LCOM5 : 0.41666666666666663
+Metric LCOM5 : 0.8284313725490196
 Metric ADS : 0
 Metric AIS : 0
 Metric ACS : 0
@@ -52,7 +53,7 @@ Metric ICC : 0.3280212483399734
 Service Name : position, Language : java
 Metric LCOM : 0.7777777777777778
 Metric LCOM4 : 2
-Metric LCOM5 : 0.38
+Metric LCOM5 : 0.78
 Metric ADS : 0
 Metric AIS : 1
 Metric ACS : 0
@@ -69,7 +70,7 @@ Metric ICC : 0.30603448275862066
 Service Name : uc, Language : java
 Metric LCOM : 0.6666666666666667
 Metric LCOM4 : 0
-Metric LCOM5 : 0.0
+Metric LCOM5 : 1.0
 Metric ADS : 0
 Metric AIS : 1
 Metric ACS : 0
@@ -84,5 +85,5 @@ Metric CC : 2.3333333333333335
 Metric ICC : 0.136986301369863
 
 
-[Done] exited with code=0 in 3.066 seconds
+[Done] exited with code=0 in 4.358 seconds
 

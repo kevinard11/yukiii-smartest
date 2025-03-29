@@ -4,7 +4,7 @@ import yaml
 def main():
 
     # Import config
-    config = import_config("C://Users//ARD//Desktop//train-ticket//smartest.yaml")
+    config = import_config("C://Users//ARD//Desktop//qbike//smartest.yaml")
 
     # Create microservices
     mss = microservices.Microservices(config)

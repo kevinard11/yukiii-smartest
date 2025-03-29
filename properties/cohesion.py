@@ -499,7 +499,7 @@ def _calculate_lcom5(variable_func):
         if lcom5[0] != float('inf'):
             lcom5_class[class_name] = lcom5[0]
         else:
-            lcom5_class[class_name] = 0
+            lcom5_class[class_name] = 1
 
     # print(len(lcom5_class))
 
@@ -572,13 +572,14 @@ lang_list = {
     'go': {'lang': 'go', 'extract': go._extract_from_dir, 'parse' : go._parse_tree_content, 'func': go._parse_function_variable}
 }
 
-lang = 'java'
+# lang = 'java'
 
 # dir_path = "D://DATA//java//intellij//bravo-branch-service"
 # dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
-# dir_path = "C://Users//ARD//Desktop//robot-shop"
+# dir_path = "C://Users//ARD//Desktop//robot-shop//shipping"
 # dir_path = "./example/java/rs"
-dir_path = "C://Users//ARD//Desktop//bqm-repo//agent_management"
+# dir_path = "C://Users//ARD//Desktop//train-ticket//ts-verification-code-service//src//main"
+
 # tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
 # variable_func = lang_list[lang]['func'](tree_contents)

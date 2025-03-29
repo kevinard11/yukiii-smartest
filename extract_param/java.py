@@ -70,7 +70,7 @@ def count_lines_of_code(file_path):
             in_block_comment = True
         if block_end and stripped.endswith(block_end):
             in_block_comment = False
-            continue 
+            continue
 
         if in_block_comment:
             continue
@@ -83,7 +83,6 @@ def count_lines_of_code(file_path):
     return total_loc, effective_loc
 
 def _parse_content(file_path) -> any:
-    # print(file_path)
     with open(file_path, "r", encoding="utf-8") as f:
         file_contents = f.read()
 
@@ -1353,7 +1352,7 @@ def get_complexity_element(tree):
 
 
 # tree_contents = _extract_from_dir("./example/java/test", _parse_tree_content, "java")
-# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//bqm-repo//agent_management", _parse_tree_content, "java")
+# tree_contents = _extract_from_dir("C://Users//ARD//Desktop//train-ticket//ts-verification-code-service//src//main", _parse_tree_content, "java")
 # print(tree_contents)
 # variable_func = _parse_function_variable(tree_contents)
 # print(json.dumps(variable_func, indent=2))
