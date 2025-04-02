@@ -30,8 +30,9 @@ Create config file in the source repository that want to be analyze. Description
 
 - calculate metric
 
+--repo = repo url used for calculate
 ```bash
-python ./main.py
+python ./main.py --repo="yourgiturl"
 ```
 
 ## Examples
