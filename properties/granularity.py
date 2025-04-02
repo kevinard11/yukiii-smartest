@@ -1,4 +1,8 @@
+
+import sys, os
+sys.path.append(os.path.abspath("C:/Users/ARD/Desktop/yukiii-smartest"))
 from extract_param import java, py, js, php, go
+
 import json
 
 def _calculate_noo(function):
@@ -100,11 +104,12 @@ fgs_operation_weights = {
     "delete": 2  # Delete
 }
 
-# lang = 'js'
+# lang = 'java'
 # dir_path = "D://DATA//java//intellij//bravo-branch-service//src//main"
 # dir_path = 'C://Users//ARD//Desktop//DeathStarBench-master//hotelReservation//services'
 # dir_path = "C://Users//ARD//Desktop//robot-shop"
 # dir_path = "./example/js/rs"
+# dir_path = "C://Users//ARD//Desktop//andromeda//agent_management"
 # tree_contents = lang_list[lang]['extract'](dir_path, lang_list[lang]['parse'], lang)
 # print(tree_contents)
 # variable_func = lang_list[lang]['func'](tree_contents)

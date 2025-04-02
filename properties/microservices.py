@@ -78,13 +78,13 @@ class Microservices():
         self.metric['Cohesion']['Average LCOM5'] = cohesion._calculate_avg_lcom5(sum([ms.cohesion['LCOM5'] for ms in self.services]), len(self.services))
 
     def calculate_adcs(self):
-        self.metric['Coupling']['ADCS'] = coupling.calculate_adcs(sum([ms.coupling['ADS'] for ms in self.services]), len(self.services))
+        self.metric['Coupling']['ADCS'] = coupling.calculate_adcs(sum([ms.coupling['AIS'] for ms in self.services]), len(self.services))
 
     def calculate_scf(self):
-        self.metric['Coupling']['SCF'] = coupling.calculate_scf(sum([ms.coupling['ADS'] for ms in self.services]), len(self.services))
+        self.metric['Coupling']['SCF'] = coupling.calculate_scf(sum([ms.coupling['AIS'] for ms in self.services]), len(self.services))
 
     def calculate_aacs(self):
-        self.metric['Coupling']['Average ACS'] = coupling.calculate_aacs(sum([ms.coupling['ACS'] * ms.coupling['AIS'] for ms in self.services]), len(self.services))
+        self.metric['Coupling']['Average ACS'] = coupling.calculate_aacs(sum([ms.coupling['ACS'] * ms.coupling['ADS'] for ms in self.services]), len(self.services))
 
     def calculate_average_noo(self):
         self.metric['Granularity']['Average NOO'] = granularity._calculate_average_noo(sum([ms.granularity['NOO'] for ms in self.services]), len(self.services))
@@ -99,7 +99,7 @@ class Microservices():
         self.metric['Granularity']['Average SGM'] = granularity._calculate_asgm(sum([ms.granularity['SGM'] for ms in self.services]), len(self.services))
 
     def calculate_tcm(self):
-        self.metric['Complexity']['TCM'] = sum([(ms.complexity['TCM'] if 'TCM' in ms.complexity else 0) * (ms.complexity['ComF'] if 'ComF' in ms.complexity else 0) for ms in self.services])
+        self.metric['Complexity']['TCM'] = sum([(ms.complexity['TCM'] if 'TCM' in ms.complexity else 0) * (ms.complexity['ComF'] if 'ComF' in ms.complexity else 0) for ms in self.services]) / len(self.services)
 
     def calculate_average_hm(self):
         self.metric['Complexity']["Average Halstead's metric (Difficulty)"] = complexity._calculate_average_agg_hm(sum([ms.complexity['HM'] if 'HM' in ms.complexity else 0 for ms in self.services]), len(self.services))
@@ -152,3 +152,19 @@ class Microservices():
                 if ms.name == node :
                     ms.set_indirect_coupling(connected_nodes)
             ms.set_complexity_metric()
+
+    def to_response(self):
+        res = {}
+        for key, aspect in self.metric.items():
+            for metric, value in aspect.items():
+                res.update({metric: value})
+
+        services = []
+        for service in self.services:
+            services.append(service.to_response())
+
+        return {
+            'name': self.name,
+            'metric': res,
+            'services': services
+        }

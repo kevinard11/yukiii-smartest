@@ -1,29 +1,18 @@
-from properties import microservices
-import yaml
+import smartest
+import argparse
 
 def main():
+    parser = argparse.ArgumentParser()
 
-    # Import config
-    config = import_config("C://Users//ARD//Desktop//qbike//smartest.yaml")
+    parser.add_argument("-r","--repo", help="git url")
+    parser.add_argument("--print", help="git url", action="store_true")
+    parsed_config = parser.parse_args()
 
-    # Create microservices
-    mss = microservices.Microservices(config)
-    print(mss.graph.edges())
+    repo_url = parsed_config.repo
+    is_print = parsed_config.print
+    # repo_url = "https://github.com/kevinard11/yukiii-phonebook"
 
-    mss.print()
-    for ms in mss.services:
-        ms.print()
-
-def import_config(filepath):
-    # read yaml configuration
-    config = {}
-    with open(filepath, "r") as stream:
-        try:
-            config = yaml.safe_load(stream)
-        except yaml.YAMLError as e:
-            print(e)
-
-    return config
+    smartest.run_smartest(repo_url, is_print)
 
 if __name__ == "__main__":
     main()

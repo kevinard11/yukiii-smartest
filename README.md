@@ -15,7 +15,7 @@
 - install lib
 
 ```bash
-pip install -r ./requirement.txt
+pip install -r ./requirements.txt
 ```
 
 - install lib ast (tree-sitter)

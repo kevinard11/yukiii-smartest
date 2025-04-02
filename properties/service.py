@@ -100,3 +100,14 @@ class Service:
 
     def set_indirect_coupling(self, indirect_coupling):
         self.indirect_coupling = indirect_coupling
+
+    def to_response(self):
+        res = {}
+        for key, item in chain(self.cohesion.items(), self.coupling.items(), self.granularity.items(), self.complexity.items()):
+            res.update({key: item})
+
+        return {
+            'name': self.name,
+            'metric': res
+        }
+
