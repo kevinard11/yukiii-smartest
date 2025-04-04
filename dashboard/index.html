@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SMARTest Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+  <div class="flex flex-col md:flex-row h-screen">
+
+    <!-- Left: Input Section -->
+    <div class="md:w-1/2 w-full p-8 flex flex-col justify-center bg-white shadow-lg">
+      <h1 class="text-3xl font-bold mb-6">SMARTest Dashboard</h1>
+
+      <form id="urlForm" class="space-y-4">
+        <div>
+          <label for="urlInput" class="block text-sm font-medium text-gray-700">Repo URL</label>
+          <input
+            type="text"
+            id="urlInput"
+            placeholder="https://github.com/..."
+            class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          id="submitBtn"
+          class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition"
+        >
+          Submit
+        </button>
+        <p id="errorMsg" class="text-red-600 text-sm mt-2 hidden"></p>
+      </form>
+    </div>
+
+    <!-- Right: List of Submissions -->
+    <div class="md:w-1/2 w-full p-8 overflow-auto bg-gray-50">
+      <h2 class="text-xl font-semibold mb-4">Last Submissions</h2>
+      <ul id="latestList" class="space-y-3">
+        <!-- List items will be appended here -->
+      </ul>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

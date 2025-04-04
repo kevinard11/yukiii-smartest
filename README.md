@@ -1,5 +1,9 @@
 # Tesis
+# Smartest
 
+```bash
+cd smartest
+```
 ## Version
 
 - 0.0.1 : parse all file
@@ -8,11 +12,22 @@
 - 0.0.4 : all granularity metric
 - 0.0.5 : all complexity metric
 - 0.0.6 : main program
-- 0.0.7 : reorganize file and folder
-- 0.0.8 : endpoint
+- 0.0.7 : endpoint
+- 0.0.8 : reorganize file and folder
+- 0.0.9 : dashboard, database
+- 0.1.0 : dockerization
 
-## Setup
+## Config
 
+Create config file in the source repository that want to be analyze. Description will be given in the next version.
+
+## Run via docker
+```bash
+docker-compose up --build
+```
+## Run via command
+
+## Setup Lib
 - install lib
 
 ```bash
@@ -25,19 +40,24 @@ pip install -r ./requirements.txt
 python ./setup-lib.py
 ```
 
-## Config
-
-Create config file in the source repository that want to be analyze. Description will be given in the next version.
-
-## Run
-
-- calculate metric
+### Run smartest via main
+Setup mongo in local and edit user and password for mongo in mongo_db.py
 
 --repo = repo url used for calculate
 
 ```bash
 python ./main.py --repo="yourgiturl"
 ```
+
+### Run smartest via app
+
+- run app
+```bash
+cd smartest
+python ./app.py
+```
+
+- run dashboard
 
 ## Examples
 

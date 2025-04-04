@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  smartest:
+    build: ./smartest
+    container_name: smartest
+    restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://admin:admin123@mongo:27017/
+    # volumes:
+    #   - ./dev_mount:/app
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongo_data:/data/db
+
+  dashboard:
+    image: node:alpine
+    container_name: dashboard
+    working_dir: /app
+    volumes:
+      - ./dashboard:/app
+    ports:
+      - "8080:8080"
+    command: sh -c "npm install -g http-server && http-server -p 8080 -c-1"
+    restart: always
+
+volumes:
+  mongo_data:

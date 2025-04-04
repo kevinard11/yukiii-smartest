@@ -10,7 +10,6 @@ def main():
 
     repo_url = parsed_config.repo
     is_print = parsed_config.print
-    # repo_url = "https://github.com/kevinard11/yukiii-phonebook"
 
     smartest.run_smartest(repo_url, is_print)
 

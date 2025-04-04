@@ -7,10 +7,10 @@ from extract_param import java, py, js, php, go
 from collections import defaultdict
 from itertools import combinations
 
-from gensim.models import Doc2Vec
-from gensim.models.doc2vec import TaggedDocument
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
+# from gensim.models import Doc2Vec
+# from gensim.models.doc2vec import TaggedDocument
+# from sklearn.metrics.pairwise import cosine_similarity
+# import numpy as np
 
 from typing import Dict, Tuple
 
@@ -364,91 +364,91 @@ def get_func_body(functions):
 
     return methods
 
-# Latih model Doc2Vec untuk menghasilkan vektor representasi dari methods
-def train_doc2vec(methods):
-    tagged_data = [TaggedDocument(words=method_body.split(), tags=[method_signature]) for method_signature, method_body in methods]
-    model = Doc2Vec(vector_size=100, window=2, min_count=1, workers=4, epochs=100)
-    model.build_vocab(tagged_data)
-    model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
-    return model
+# # Latih model Doc2Vec untuk menghasilkan vektor representasi dari methods
+# def train_doc2vec(methods):
+#     tagged_data = [TaggedDocument(words=method_body.split(), tags=[method_signature]) for method_signature, method_body in methods]
+#     model = Doc2Vec(vector_size=100, window=2, min_count=1, workers=4, epochs=100)
+#     model.build_vocab(tagged_data)
+#     model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
+#     return model
 
-# Fungsi untuk menghitung COSM menggunakan cosine similarity
-def compute_cosm_cosine(method1, method2, model):
-    vector1 = model.infer_vector(method1.split())
-    vector2 = model.infer_vector(method2.split())
-    similarity = cosine_similarity([vector1], [vector2])[0][0]
-    return similarity
+# # Fungsi untuk menghitung COSM menggunakan cosine similarity
+# def compute_cosm_cosine(method1, method2, model):
+#     vector1 = model.infer_vector(method1.split())
+#     vector2 = model.infer_vector(method2.split())
+#     similarity = cosine_similarity([vector1], [vector2])[0][0]
+#     return similarity
 
-# Fungsi untuk menghitung COSM menggunakan euclidean distance
-def compute_cosm_euclidean(method1, method2, model):
-    vector1 = model.infer_vector(method1.split())
-    vector2 = model.infer_vector(method2.split())
-    euclidean_distance = np.linalg.norm(vector1 - vector2)
-    similarity = 1 / (1 + euclidean_distance)
-    return similarity
+# # Fungsi untuk menghitung COSM menggunakan euclidean distance
+# def compute_cosm_euclidean(method1, method2, model):
+#     vector1 = model.infer_vector(method1.split())
+#     vector2 = model.infer_vector(method2.split())
+#     euclidean_distance = np.linalg.norm(vector1 - vector2)
+#     similarity = 1 / (1 + euclidean_distance)
+#     return similarity
 
-def calculate_COSM(model, method_body, similarity_func=compute_cosm_cosine):
-    # Pilih dua method yang ingin dibandingkan, misalnya method pertama dan kedua
-    method1 = method_body[0][1]  # Method body dari method pertama
-    method2 = method_body[1][1]  # Method body dari method kedua
+# def calculate_COSM(model, method_body, similarity_func=compute_cosm_cosine):
+#     # Pilih dua method yang ingin dibandingkan, misalnya method pertama dan kedua
+#     method1 = method_body[0][1]  # Method body dari method pertama
+#     method2 = method_body[1][1]  # Method body dari method kedua
 
-    # Hitung COSM menggunakan cosine similarity
-    return similarity_func(method1, method2, model)
+#     # Hitung COSM menggunakan cosine similarity
+#     return similarity_func(method1, method2, model)
 
-def extract_similarity(model, method_body, similarity_func=compute_cosm_cosine):
-    n = len(method_body)
+# def extract_similarity(model, method_body, similarity_func=compute_cosm_cosine):
+#     n = len(method_body)
 
-    # Hitung matriks similarity (sim_matrix)
-    sim_matrix = np.zeros((n, n))
-    pair_indices = list(combinations(range(n), 2))
-    for i, j in pair_indices:
-        sim = similarity_func(method_body[i][1], method_body[j][1], model)
-        sim_matrix[i, j] = sim
-        sim_matrix[j, i] = sim  # matriks simetri
+#     # Hitung matriks similarity (sim_matrix)
+#     sim_matrix = np.zeros((n, n))
+#     pair_indices = list(combinations(range(n), 2))
+#     for i, j in pair_indices:
+#         sim = similarity_func(method_body[i][1], method_body[j][1], model)
+#         sim_matrix[i, j] = sim
+#         sim_matrix[j, i] = sim  # matriks simetri
 
-    return sim_matrix, pair_indices
+#     return sim_matrix, pair_indices
 
-def calculate_ACOSM(sim_matrix, pair_indices):
-    return np.mean([sim_matrix[i, j] for i, j in pair_indices])
+# def calculate_ACOSM(sim_matrix, pair_indices):
+#     return np.mean([sim_matrix[i, j] for i, j in pair_indices])
 
-def calculate_CCOC(acosm_value):
-    # Jika ACOSM > 0, maka COCC = ACOSM, jika tidak, COCC = 0.
-    return acosm_value if acosm_value > 0 else 0
+# def calculate_CCOC(acosm_value):
+#     # Jika ACOSM > 0, maka COCC = ACOSM, jika tidak, COCC = 0.
+#     return acosm_value if acosm_value > 0 else 0
 
-def calculate_LCOSM(sim_matrix, pair_indices, ACOSM):
-    # Bentuk himpunan M untuk setiap metode: M[i] = { j | j != i dan sim_matrix[i,j] > acosm }
-    M = []
-    n, _ = sim_matrix.shape
-    for i in range(n):
-        similar_set = set()
-        for j in range(n):
-            if i != j and sim_matrix[i, j] > ACOSM:
-                similar_set.add(j)
-        M.append(similar_set)
+# def calculate_LCOSM(sim_matrix, pair_indices, ACOSM):
+#     # Bentuk himpunan M untuk setiap metode: M[i] = { j | j != i dan sim_matrix[i,j] > acosm }
+#     M = []
+#     n, _ = sim_matrix.shape
+#     for i in range(n):
+#         similar_set = set()
+#         for j in range(n):
+#             if i != j and sim_matrix[i, j] > ACOSM:
+#                 similar_set.add(j)
+#         M.append(similar_set)
 
-    # Bentuk himpunan P dan Q: untuk setiap pasangan (i, j) dengan i < j
-    P = []
-    Q = []
-    for i, j in pair_indices:
-        if M[i].intersection(M[j]) == set():
-            P.append((i, j))
-        else:
-            Q.append((i, j))
+#     # Bentuk himpunan P dan Q: untuk setiap pasangan (i, j) dengan i < j
+#     P = []
+#     Q = []
+#     for i, j in pair_indices:
+#         if M[i].intersection(M[j]) == set():
+#             P.append((i, j))
+#         else:
+#             Q.append((i, j))
 
-    total_pairs = len(pair_indices)
+#     total_pairs = len(pair_indices)
 
-    # Hitung LCOSM sesuai definisi
-    if len(P) > len(Q):
-        LCOSM = (len(P) - len(Q)) / total_pairs
-    else:
-        LCOSM = 0
+#     # Hitung LCOSM sesuai definisi
+#     if len(P) > len(Q):
+#         LCOSM = (len(P) - len(Q)) / total_pairs
+#     else:
+#         LCOSM = 0
 
-    details = {
-        'M_sets': M,
-        'P_pairs': P,
-        'Q_pairs': Q
-    }
-    return LCOSM, details
+#     details = {
+#         'M_sets': M,
+#         'P_pairs': P,
+#         'Q_pairs': Q
+#     }
+#     return LCOSM, details
 
 def _calculate_lcom(functions):
     all_params = get_all_params(functions)
@@ -475,13 +475,13 @@ def _calculate_lcom4(functions):
 def _calculate_avg_lcom4(total_lcom4, total_services):
     return total_lcom4 / total_services if total_services != 0 else 0
 
-def _calculate_acosm(variable_func):
-    method_body = get_func_body(variable_func["functions"])
-    model = train_doc2vec(method_body)
-    sim_matrix, pair_indices = extract_similarity(model, method_body, compute_cosm_cosine)
+# def _calculate_acosm(variable_func):
+#     method_body = get_func_body(variable_func["functions"])
+#     model = train_doc2vec(method_body)
+#     sim_matrix, pair_indices = extract_similarity(model, method_body, compute_cosm_cosine)
 
-    acosm = calculate_ACOSM(sim_matrix, pair_indices)
-    return acosm
+#     acosm = calculate_ACOSM(sim_matrix, pair_indices)
+#     return acosm
 
 def _calculate_lcom5(variable_func):
     variables = variable_func["global_vars"]

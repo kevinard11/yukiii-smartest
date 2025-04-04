@@ -2,7 +2,7 @@ import os
 from tree_sitter import Language
 
 # Direktori untuk menyimpan grammar yang di-clone
-LIB_DIR = "./lib"
+LIB_DIR = "./smartest/lib"
 BUILD_PATH = "build/my-languages.so"
 
 # Daftar grammar yang akan digunakan

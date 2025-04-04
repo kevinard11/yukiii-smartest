@@ -1,19 +1,19 @@
-from properties import microservices
+from properties import microservices, mongo_db
 import yaml
 from git import Repo
 from pathlib import Path
 
-def run_smartest(repo_url, is_print):
+def run_smartest(repo_url, is_save):
     repo_url_split = repo_url.split("/")
-    local_path = f"C://Users//ARD//Desktop//{repo_url_split[-2]}//{repo_url_split[-1]}"
+    # local_path = f"C://Users//ARD//Desktop//{repo_url_split[-2]}//{repo_url_split[-1]}"
+    local_path = f"./{repo_url_split[-2]}/{repo_url_split[-1]}"
 
     clone_repo(repo_url, local_path)
 
     config_path = find_config(local_path)
-    mss = ""
+    smartest_id = ""
 
     if config_path:
-        # config_path = "C://Users//ARD//Desktop//robot-shop//smartest.yaml"
 
         # Import config
         config = import_config(config_path)
@@ -21,10 +21,13 @@ def run_smartest(repo_url, is_print):
         # Create microservices
         mss = create_microservices(config)
 
-        if is_print:
-            print_mss(mss)
+        if is_save:
+            # print_mss(mss)
+            smartest_id = mongo_db.insert_data_microservices(mss.to_response(), repo_url)
+    else:
+        return "401"
 
-    return mss
+    return smartest_id
 
 def create_microservices(config):
     mss = microservices.Microservices(config)
@@ -70,3 +73,9 @@ def find_config(dir_path):
         return str(search_path)
     else:
         return None
+
+def find_10_latest_smartest():
+    return mongo_db.get_10_latest_data_smartest()
+
+def find_smartest(smartest_id):
+    return mongo_db.get_data_smartest_by_id(smartest_id)
