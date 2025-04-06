@@ -1,9 +1,4 @@
 # Tesis
-# Smartest
-
-```bash
-cd smartest
-```
 ## Version
 
 - 0.0.1 : parse all file
@@ -17,6 +12,7 @@ cd smartest
 - 0.0.9 : dashboard, database
 - 0.1.0 : dockerization
 
+# Smartest
 ## Config
 
 Create config file in the source repository that want to be analyze. Description will be given in the next version.
@@ -25,9 +21,14 @@ Create config file in the source repository that want to be analyze. Description
 ```bash
 docker-compose up --build
 ```
-## Run via command
 
-## Setup Lib
+
+## Run via command
+```bash
+cd smartest
+```
+
+### Setup Lib
 - install lib
 
 ```bash
@@ -58,6 +59,10 @@ python ./app.py
 ```
 
 - run dashboard
+```bash
+cd dashboard
+```
+open index.html
 
 ## Examples
 
