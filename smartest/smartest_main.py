@@ -1,5 +1,5 @@
 from properties import microservices, mongo_db
-import yaml
+import yaml, shutil, os, stat
 from git import Repo
 from pathlib import Path
 
@@ -17,8 +17,9 @@ def run_smartest(repo_url, is_save):
 
         # Import config
         config = import_config(config_path)
+        config['root-dir'] = local_path + '/'
 
-        # Create microservices
+        Create microservices
         mss = create_microservices(config)
 
         if is_save:
@@ -49,14 +50,23 @@ def import_config(filepath):
 
     return config
 
+# Handler untuk force delete file read-only
+def remove_readonly(func, path, _):
+    os.chmod(path, stat.S_IWRITE)  # ubah ke writable
+    func(path)
+
 def clone_repo(repo_url, local_path):
-    if not path_exist(local_path):
-        try:
-            print(f"Folder doesn't exist, clone folder")
-            Repo.clone_from(repo_url, local_path)
-            print(f"Repo cloned to {local_path}")
-        except Exception as e:
-            print(f"Error cloning repo: {e}")
+    if path_exist(local_path):
+        # 1. Hapus folder kalau sudah ada
+        print(f"Menghapus folder lama: {local_path}")
+        shutil.rmtree(local_path, onerror=remove_readonly)
+
+    try:
+        print(f"Clone folder")
+        Repo.clone_from(repo_url, local_path)
+        print(f"Repo cloned to {local_path}")
+    except Exception as e:
+        print(f"Error cloning repo: {e}")
 
 def path_exist(dir_path):
     path = Path(dir_path)
@@ -66,7 +76,7 @@ def path_exist(dir_path):
         return False
 
 def find_config(dir_path):
-    target_file = dir_path + "//smartest.yaml"
+    target_file = dir_path + "/smartest.yaml"
     search_path = Path(target_file)
 
     if search_path.exists():

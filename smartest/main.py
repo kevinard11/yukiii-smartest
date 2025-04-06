@@ -1,4 +1,4 @@
-import smartest
+import smartest_main as smartest
 import argparse
 
 def main():
