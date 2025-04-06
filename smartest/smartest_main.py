@@ -19,7 +19,7 @@ def run_smartest(repo_url, is_save):
         config = import_config(config_path)
         config['root-dir'] = local_path + '/'
 
-        Create microservices
+        # Create microservices
         mss = create_microservices(config)
 
         if is_save:
